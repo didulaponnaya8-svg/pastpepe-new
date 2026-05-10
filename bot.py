@@ -3,65 +3,35 @@ import json
 import logging
 import requests
 from io import BytesIO
+from bs4 import BeautifulSoup
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# BOT_TOKEN එක ENV එකෙන් ගන්නවා. Render එකේ ENV අවුල් නම් මේ line එක uncomment කරලා token එක දාපන්
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
-# BOT_TOKEN = "8105173071:AAH..."
-
 BOT_USERNAME = "@pastdlbbot_bot"
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(level=logging.INFO)
 
-with open('papers.json', 'r', encoding='utf-8') as f:
-    PAPERS_DB = json.load(f)
+# Subject එකට e-kalvi search URL map එක
+EKALVI_SEARCH = {
+    "physics": "https://e-kalvi.com/?s=2021+AL+Physics+Past+Paper+English",
+    "chemistry": "https://e-kalvi.com/?s=2021+AL+Chemistry+Past+Paper+English",
+    "biology": "https://e-kalvi.com/?s=2021+AL+Biology+Past+Paper+English",
+}
 
 def main_menu():
     keyboard = [
-        [InlineKeyboardButton("📘 A/L Papers", callback_data='level_al')],
-        [InlineKeyboardButton("📗 O/L Papers", callback_data='level_ol')],
-        [InlineKeyboardButton("✅ Marking Schemes", callback_data='marking_info')]
+        [InlineKeyboardButton("📘 A/L Physics", callback_data='sub_physics')],
+        [InlineKeyboardButton("📗 A/L Chemistry", callback_data='sub_chemistry')],
+        [InlineKeyboardButton("📙 A/L Biology", callback_data='sub_biology')],
     ]
     return InlineKeyboardMarkup(keyboard)
 
-def subjects_menu(level):
-    subjects = list(PAPERS_DB.get(level, {}).keys())
-    keyboard = []
-    row = []
-    for sub in subjects:
-        row.append(InlineKeyboardButton(f"📚 {sub.replace('_', ' ').title()}", callback_data=f'sub_{level}_{sub}'))
-        if len(row) == 2:
-            keyboard.append(row)
-            row = []
-    if row: keyboard.append(row)
-    keyboard.append([InlineKeyboardButton("🔙 Main Menu", callback_data='main_menu')])
-    return InlineKeyboardMarkup(keyboard)
-
-def years_menu(level, subject):
-    years = sorted(PAPERS_DB.get(level, {}).get(subject, {}).keys(), reverse=True)
-    keyboard = []
-    row = []
-    for year in years:
-        row.append(InlineKeyboardButton(f"📅 {year}", callback_data=f'get_{level}_{subject}_{year}'))
-        if len(row) == 3:
-            keyboard.append(row)
-            row = []
-    if row: keyboard.append(row)
-    keyboard.append([InlineKeyboardButton("🔙 Back", callback_data=f'level_{level}')])
-    return InlineKeyboardMarkup(keyboard)
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
     await update.message.reply_text(
-        f"📚 *Welcome {user.first_name}!* 📚\n\n"
-        f"🔥 *PastPaper LK Bot* 🔥\n\n"
-        f"✅ A/L & O/L Papers 2018-2023\n"
-        f"✅ Direct from doenets.lk\n"
-        f"✅ 100% Free PDF Download\n\n"
+        f"📚 *PastPaper LK Bot* 📚\n\n"
+        f"✅ Live scraping from e-kalvi.com\n"
+        f"✅ 100% Working PDFs\n\n"
         f"👇 Subject එකක් තෝරන්න",
         parse_mode='Markdown',
         reply_markup=main_menu()
@@ -72,111 +42,49 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
 
-    if data == 'main_menu':
-        await query.edit_message_text(
-            "📚 *PastPaper LK Bot* 📚\n\n👇 Subject එකක් තෝරන්න",
-            parse_mode='Markdown',
-            reply_markup=main_menu()
-        )
+    if data.startswith('sub_'):
+        subject = data.split('_')[1]
+        msg = await query.message.reply_text(f"🔍 Searching {subject.title()} 2021 Paper...\n\nWait 10-15 seconds...")
 
-    elif data.startswith('level_'):
-        level = data.split('_')[1]
-        await query.edit_message_text(
-            f"📚 *{level.upper()} Subjects*\n\nSubject එකක් තෝරන්න 👇",
-            parse_mode='Markdown',
-            reply_markup=subjects_menu(level)
-        )
-
-    elif data.startswith('sub_'):
-        parts = data.split('_')
-        level = parts[1]
-        subject = '_'.join(parts[2:])
-        await query.edit_message_text(
-            f"📅 *{level.upper()} {subject.replace('_', ' ').title()}*\n\nYear එක තෝරන්න 👇",
-            parse_mode='Markdown',
-            reply_markup=years_menu(level, subject)
-        )
-
-    elif data.startswith('get_'):
-        parts = data.split('_')
-        level = parts[1]
-        year = parts[-1]
-        subject = '_'.join(parts[2:-1])
-
-        url = PAPERS_DB.get(level, {}).get(subject, {}).get(year)
-
-        if url:
-            msg = await query.message.reply_text("⏳ Downloading from doenets.lk...\n\nවිනාඩි 10-20ක් යන්න පුලුවන්. Wait...")
-            try:
-                # 🔥 Fix 1: Telegram block එකට solution - අපි download කරලා upload කරනවා
-                headers = {'User-Agent': 'Mozilla/5.0'}
-                response = requests.get(url, headers=headers, timeout=60)
-
-                if response.status_code == 200:
-                    pdf_file = BytesIO(response.content)
-                    pdf_file.name = f"{level.upper()}_{subject}_{year}.pdf"
-
-                    # 🔥 Fix 2: parse_mode අයින් කරා + special chars අයින් කරා
-                    await query.message.reply_document(
-                        document=pdf_file,
-                        caption=f"✅ {level.upper()} {subject.replace('_', ' ').title()} {year}\n\n"
-                               f"📥 Download Complete!\n"
-                               f"📡 Source: doenets.lk\n\n"
-                               f"Bot: {BOT_USERNAME}"
-                    )
-                    await msg.delete()
-                else:
-                    await msg.edit_text(f"❌ doenets.lk එකේ Paper එක නෑ\n\nStatus: {response.status_code}\nTry වෙන year එකක්.")
-            except Exception as e:
-                logging.error(f"Download error: {e}")
-                await msg.edit_text(f"❌ Error: {str(e)}\n\nDoenets.lk server slow වෙන්න පුලුවන්. විනාඩි 5කින් ආයෙ try කරන්න.")
-        else:
-            await query.answer("❌ Paper එක දැනට නැත! Admin update කරනකන් ඉන්න.", show_alert=True)
-
-    elif data == 'marking_info':
-        await query.answer("Marking Scheme: /marking al physics 2023 වගේ type කරන්න", show_alert=True)
-
-async def marking_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) < 3:
-        await update.message.reply_text(
-            "❌ *Usage:* `/marking al physics 2023`\n\n"
-            "*Example:* `/marking al chemistry 2022`",
-            parse_mode='Markdown'
-        )
-        return
-
-    level, subject, year = context.args[0].lower(), context.args[1].lower(), context.args[2]
-    key = f"{level}_{subject}_{year}"
-    url = PAPERS_DB.get('marking', {}).get(key)
-
-    if url:
-        msg = await update.message.reply_text("⏳ Downloading Marking Scheme...")
         try:
+            # 1. e-kalvi එකේ search කරලා PDF link එක හොයනවා
+            search_url = EKALVI_SEARCH.get(subject)
             headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(url, headers=headers, timeout=60)
-            if response.status_code == 200:
-                pdf_file = BytesIO(response.content)
-                pdf_file.name = f"Marking_{key}.pdf"
-                await update.message.reply_document(
+            r = requests.get(search_url, headers=headers, timeout=30)
+            soup = BeautifulSoup(r.text, 'html.parser')
+
+            # 2. Download PDF button එකේ Google Drive link එක හොයනවා
+            download_link = soup.find('a', href=lambda x: x and 'drive.google.com/uc?export=download' in x)
+
+            if not download_link:
+                await msg.edit_text("❌ Paper එක e-kalvi එකේ හොයාගන්න බැරි උනා. වෙන subject එකක් try කරන්න.")
+                return
+
+            pdf_url = download_link['href']
+
+            # 3. Google Drive එකෙන් PDF එක download කරනවා
+            await msg.edit_text("⏳ Downloading PDF from Google Drive...\n\nවිනාඩි 1ක් වගේ යයි...")
+            pdf_response = requests.get(pdf_url, headers=headers, timeout=60)
+
+            if pdf_response.status_code == 200:
+                pdf_file = BytesIO(pdf_response.content)
+                pdf_file.name = f"AL_{subject.title()}_2021.pdf"
+
+                await query.message.reply_document(
                     document=pdf_file,
-                    caption=f"✅ Marking Scheme\n\n{level.upper()} {subject.title()} {year}\n\nBot: {BOT_USERNAME}"
+                    caption=f"✅ A/L {subject.title()} 2021\n\n📥 Download Complete!\n📡 Source: e-kalvi.com\n\nBot: {BOT_USERNAME}"
                 )
                 await msg.delete()
             else:
-                await msg.edit_text(f"❌ Marking scheme එක doenets.lk එකේ නෑ. Status: {response.status_code}")
+                await msg.edit_text(f"❌ Google Drive download failed. Status: {pdf_response.status_code}")
+
         except Exception as e:
-            await msg.edit_text(f"❌ Error: {str(e)}")
-    else:
-        await update.message.reply_text("❌ Marking scheme එක දැනට නැත!")
+            logging.error(f"Error: {e}")
+            await msg.edit_text(f"❌ Error: {str(e)}\n\nServer slow වෙන්න පුලුවන්. ආයෙ try කරන්න.")
 
 if __name__ == '__main__':
-    if not BOT_TOKEN:
-        raise ValueError("BOT_TOKEN environment variable not set!")
-
-    print("Starting PastPaper LK Bot...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("marking", marking_command))
     app.add_handler(CallbackQueryHandler(button_handler))
     print("Bot is polling... 100% Online ✅")
     app.run_polling()
