@@ -3,8 +3,8 @@ import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-BOT_USERNAME = "@PastPaperLKBot"
+BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
+BOT_USERNAME = "@pastdlbbot_bot"
 
 # API 1: Main
 API_1 = "https://pastpapers-api.deno.dev/api"
