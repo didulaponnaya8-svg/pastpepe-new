@@ -4,7 +4,10 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
+# BOT_TOKEN එක ENV එකෙන් හරි Hardcode කරලා හරි දාපන්
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
+# BOT_TOKEN = "8105173071:AAH..." # ENV අවුල් නම් මේක uncomment කරලා token එක දාපන්
+
 BOT_USERNAME = "@pastdlbbot_bot"
 
 logging.basicConfig(
@@ -101,8 +104,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url = PAPERS_DB.get(level, {}).get(subject, {}).get(year)
 
         if url:
-            msg = await query.message.reply_text("⏳ Downloading PDF...\n\nPlease wait...")
+            msg = await query.message.reply_text("⏳ Downloading PDF...\n\nPlease wait 5-10 seconds...")
             try:
+                # 🔥 FIX එක: parse_mode අයින් කරා + caption එකේ special chars අයින් කරා
                 await query.message.reply_document(
                     document=url,
                     filename=f"{level.upper()}_{subject}_{year}.pdf",
@@ -113,7 +117,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 await msg.delete()
             except Exception as e:
-                await msg.edit_text(f"❌ Error downloading PDF: {str(e)}\n\nTry again later.")
+                await msg.edit_text(f"❌ Error: {str(e)}\n\nPlease try again later.")
         else:
             await query.answer("❌ Paper එක දැනට නැත! Admin update කරනකන් ඉන්න.", show_alert=True)
 
