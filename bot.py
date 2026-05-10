@@ -1,12 +1,14 @@
 import os
 import json
 import logging
+import requests
+from io import BytesIO
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# BOT_TOKEN එක ENV එකෙන් හරි Hardcode කරලා හරි දාපන්
+# BOT_TOKEN එක ENV එකෙන් ගන්නවා. Render එකේ ENV අවුල් නම් මේ line එක uncomment කරලා token එක දාපන්
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
-# BOT_TOKEN = "8105173071:AAH..." # ENV අවුල් නම් මේක uncomment කරලා token එක දාපන්
+# BOT_TOKEN = "8105173071:AAH..."
 
 BOT_USERNAME = "@pastdlbbot_bot"
 
@@ -104,20 +106,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url = PAPERS_DB.get(level, {}).get(subject, {}).get(year)
 
         if url:
-            msg = await query.message.reply_text("⏳ Downloading PDF...\n\nPlease wait 5-10 seconds...")
+            msg = await query.message.reply_text("⏳ Downloading from doenets.lk...\n\nවිනාඩි 10-20ක් යන්න පුලුවන්. Wait...")
             try:
-                # 🔥 FIX එක: parse_mode අයින් කරා + caption එකේ special chars අයින් කරා
-                await query.message.reply_document(
-                    document=url,
-                    filename=f"{level.upper()}_{subject}_{year}.pdf",
-                    caption=f"✅ {level.upper()} {subject.replace('_', ' ').title()} {year}\n\n"
-                           f"📥 Download Complete!\n"
-                           f"📡 Source: doenets.lk\n\n"
-                           f"Bot: {BOT_USERNAME}"
-                )
-                await msg.delete()
+                # 🔥 Fix 1: Telegram block එකට solution - අපි download කරලා upload කරනවා
+                headers = {'User-Agent': 'Mozilla/5.0'}
+                response = requests.get(url, headers=headers, timeout=60)
+
+                if response.status_code == 200:
+                    pdf_file = BytesIO(response.content)
+                    pdf_file.name = f"{level.upper()}_{subject}_{year}.pdf"
+
+                    # 🔥 Fix 2: parse_mode අයින් කරා + special chars අයින් කරා
+                    await query.message.reply_document(
+                        document=pdf_file,
+                        caption=f"✅ {level.upper()} {subject.replace('_', ' ').title()} {year}\n\n"
+                               f"📥 Download Complete!\n"
+                               f"📡 Source: doenets.lk\n\n"
+                               f"Bot: {BOT_USERNAME}"
+                    )
+                    await msg.delete()
+                else:
+                    await msg.edit_text(f"❌ doenets.lk එකේ Paper එක නෑ\n\nStatus: {response.status_code}\nTry වෙන year එකක්.")
             except Exception as e:
-                await msg.edit_text(f"❌ Error: {str(e)}\n\nPlease try again later.")
+                logging.error(f"Download error: {e}")
+                await msg.edit_text(f"❌ Error: {str(e)}\n\nDoenets.lk server slow වෙන්න පුලුවන්. විනාඩි 5කින් ආයෙ try කරන්න.")
         else:
             await query.answer("❌ Paper එක දැනට නැත! Admin update කරනකන් ඉන්න.", show_alert=True)
 
@@ -139,12 +151,21 @@ async def marking_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if url:
         msg = await update.message.reply_text("⏳ Downloading Marking Scheme...")
-        await update.message.reply_document(
-            document=url,
-            filename=f"Marking_{key}.pdf",
-            caption=f"✅ Marking Scheme\n\n{level.upper()} {subject.title()} {year}\n\nBot: {BOT_USERNAME}"
-        )
-        await msg.delete()
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=60)
+            if response.status_code == 200:
+                pdf_file = BytesIO(response.content)
+                pdf_file.name = f"Marking_{key}.pdf"
+                await update.message.reply_document(
+                    document=pdf_file,
+                    caption=f"✅ Marking Scheme\n\n{level.upper()} {subject.title()} {year}\n\nBot: {BOT_USERNAME}"
+                )
+                await msg.delete()
+            else:
+                await msg.edit_text(f"❌ Marking scheme එක doenets.lk එකේ නෑ. Status: {response.status_code}")
+        except Exception as e:
+            await msg.edit_text(f"❌ Error: {str(e)}")
     else:
         await update.message.reply_text("❌ Marking scheme එක දැනට නැත!")
 
