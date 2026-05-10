@@ -12,7 +12,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-# papers.json file එක load කරනවා
 with open('papers.json', 'r', encoding='utf-8') as f:
     PAPERS_DB = json.load(f)
 
@@ -25,7 +24,6 @@ def main_menu():
     return InlineKeyboardMarkup(keyboard)
 
 def subjects_menu(level):
-    # papers.json එකේ තියෙන subjects විතරක් පෙන්නනවා
     subjects = list(PAPERS_DB.get(level, {}).keys())
     keyboard = []
     row = []
@@ -39,7 +37,6 @@ def subjects_menu(level):
     return InlineKeyboardMarkup(keyboard)
 
 def years_menu(level, subject):
-    # papers.json එකේ තියෙන years විතරක් පෙන්නනවා
     years = sorted(PAPERS_DB.get(level, {}).get(subject, {}).keys(), reverse=True)
     keyboard = []
     row = []
@@ -104,16 +101,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url = PAPERS_DB.get(level, {}).get(subject, {}).get(year)
 
         if url:
-            msg = await query.message.reply_text("⏳ *Downloading PDF...*\n\nPlease wait...", parse_mode='Markdown')
+            msg = await query.message.reply_text("⏳ Downloading PDF...\n\nPlease wait...")
             try:
                 await query.message.reply_document(
                     document=url,
                     filename=f"{level.upper()}_{subject}_{year}.pdf",
-                    caption=f"✅ *{level.upper()} {subject.replace('_', ' ').title()} {year}*\n\n"
-                           f"📥 *Download Complete!*\n"
+                    caption=f"✅ {level.upper()} {subject.replace('_', ' ').title()} {year}\n\n"
+                           f"📥 Download Complete!\n"
                            f"📡 Source: doenets.lk\n\n"
-                           f"> {BOT_USERNAME}",
-                    parse_mode='Markdown'
+                           f"Bot: {BOT_USERNAME}"
                 )
                 await msg.delete()
             except Exception as e:
@@ -138,12 +134,11 @@ async def marking_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = PAPERS_DB.get('marking', {}).get(key)
 
     if url:
-        msg = await update.message.reply_text("⏳ *Downloading Marking Scheme...*", parse_mode='Markdown')
+        msg = await update.message.reply_text("⏳ Downloading Marking Scheme...")
         await update.message.reply_document(
             document=url,
             filename=f"Marking_{key}.pdf",
-            caption=f"✅ *Marking Scheme*\n\n{level.upper()} {subject.title()} {year}\n\n> {BOT_USERNAME}",
-            parse_mode='Markdown'
+            caption=f"✅ Marking Scheme\n\n{level.upper()} {subject.title()} {year}\n\nBot: {BOT_USERNAME}"
         )
         await msg.delete()
     else:
