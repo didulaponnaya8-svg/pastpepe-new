@@ -6,31 +6,25 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
 
 PAPERS = {
-    "physics_2021_s": {
-        "name": "Physics 2021 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"
-    },
-    "physics_2020_s": {
-        "name": "Physics 2020 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"
-    },
-    "physics_2019_s": {
-        "name": "Physics 2019 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"
-    },
-    "physics_2018_s": {
-        "name": "Physics 2018 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"
-    },
-    "physics_2017_s": {
-        "name": "Physics 2017 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"
-    },
-    "physics_2016_s": {
-        "name": "Physics 2016 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"
-    }
+    "physics_2021_s": {"name": "Physics 2021 සිංහල", "id": "1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"},
+    "physics_2020_s": {"name": "Physics 2020 සිංහල", "id": "1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"},
+    "physics_2019_s": {"name": "Physics 2019 සිංහල", "id": "1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"},
+    "physics_2018_s": {"name": "Physics 2018 සිංහල", "id": "1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"},
+    "physics_2017_s": {"name": "Physics 2017 සිංහල", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"},
+    "physics_2016_s": {"name": "Physics 2016 සිංහල", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"}
 }
+
+def download_gdrive(file_id):
+    URL = "https://docs.google.com/uc?export=download&confirm=t"
+    session = requests.Session()
+    response = session.get(URL, params={'id': file_id}, stream=True)
+
+    # Virus scan bypass
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            response = session.get(URL, params={'id': file_id, 'confirm': value}, stream=True)
+            break
+    return response
 
 def main_menu():
     keyboard = []
@@ -52,20 +46,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     paper = PAPERS[query.data]
     msg = await query.message.reply_text(f"⏳ {paper['name']} එවනවා...")
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        r = requests.get(paper['url'], headers=headers, timeout=90)
+        r = download_gdrive(paper['id'])
+
+        # File size check
+        size_mb = int(r.headers.get('Content-Length', 0)) / 1024 / 1024
+        if size_mb > 49:
+            await msg.edit_text(f"❌ {paper['name']} File එක {size_mb:.1f}MB. Telegram 50MB Limit එක නිසා Send කරන්න බෑ 😔\n\nLink එක: https://drive.google.com/file/d/{paper['id']}/view")
+            return
 
         if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
             await query.message.reply_document(
                 document=r.content,
                 filename=f"{paper['name']}.pdf",
-                caption=f"✅ {paper['name']} | Good Luck!"
+                caption=f"✅ {paper['name']}"
             )
             await msg.delete()
-        elif 'text/html' in r.headers.get('Content-Type', ''):
-            await msg.edit_text("❌ Link එකට Access නෑ මචං. Drive එකේ 'Anyone with the link' Share කරලද බලපන් 😔")
         else:
-            await msg.edit_text(f"❌ Error {r.status_code}")
+            await msg.edit_text("❌ Link එකට Access නෑ මචං. Drive එකේ 'Anyone with the link' Share කරලද බලපන් 😔")
 
     except Exception as e:
         await msg.edit_text(f"❌ Error: {str(e)[:100]}")
