@@ -8,33 +8,32 @@ BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
 PAPERS = {
     "physics_2021_s": {
         "name": "Physics 2021 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1CYSZGiAl9gvpo62qH-1qiQvlN_N2odyA&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"
     },
     "physics_2020_s": {
         "name": "Physics 2020 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1DEd8pqHnMCEzvdQX7mpfmBSmPm4IrNqL&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"
     },
     "physics_2019_s": {
         "name": "Physics 2019 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1uIr8Kxv1TZVyasyKd5VoAjhiAD7PA3oo&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"
     },
     "physics_2018_s": {
         "name": "Physics 2018 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1h0hQcB6RJuuLQ5ZwRLtyDPsY-pCogI3F&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"
     },
     "physics_2017_s": {
         "name": "Physics 2017 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1OtltqF7TuP9VojH11pnun00MK7Jr1EV-&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=1HWCycDpK82X6ENdrc775BIr3x-CVBAYx" # ⚠️ Same as 2018. Double check!
     },
     "physics_2016_s": {
         "name": "Physics 2016 සිංහල",
-        "url": "https://drive.usercontent.google.com/download?id=1elMWQUTtOpBMaXK9puNA090R1lrStlaY&export=download"
+        "url": "https://drive.google.com/uc?export=download&id=14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"
     }
 }
 
 def main_menu():
     keyboard = []
-    # අලුත්ම Paper එක උඩට එන්න Sort කරපන්
     sorted_papers = dict(sorted(PAPERS.items(), key=lambda x: x[0], reverse=True))
     for key, data in sorted_papers.items():
         keyboard.append([InlineKeyboardButton(f"📘 {data['name']}", callback_data=key)])
@@ -55,15 +54,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         r = requests.get(paper['url'], headers=headers, timeout=90)
+
         if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
             await query.message.reply_document(
                 document=r.content,
                 filename=f"{paper['name']}.pdf",
-                caption=f"✅ {paper['name']}"
+                caption=f"✅ {paper['name']} | @YourBotName"
             )
             await msg.delete()
+        elif 'text/html' in r.headers.get('Content-Type', ''):
+            await msg.edit_text("❌ Link එකට Access නෑ මචං. 'Anyone with the link' Share කරලද බලපන් 😔")
         else:
-            await msg.edit_text(f"❌ Error {r.status_code}. Link එක Expired වෙන්න ඇති.")
+            await msg.edit_text(f"❌ Error {r.status_code}")
+
     except Exception as e:
         await msg.edit_text(f"❌ Error: {str(e)[:100]}")
 
