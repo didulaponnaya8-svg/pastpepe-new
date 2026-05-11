@@ -9,17 +9,15 @@ PAPERS = {
     "physics_2021_s": {"name": "Physics 2021 සිංහල", "id": "1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"},
     "physics_2020_s": {"name": "Physics 2020 සිංහල", "id": "1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"},
     "physics_2019_s": {"name": "Physics 2019 සිංහල", "id": "1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"},
-    "physics_2018_s": {"name": "Physics 2018 සිංහල", "id": "1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"},
+    "physics_2018_s": {"name": "Physics 2018 සිංහල", "id": "1CYSZGiAl9gvpo62qH-1qiQvlN_N2odyA"}, # අලුත් ID එක
     "physics_2017_s": {"name": "Physics 2017 සිංහල", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"},
-    "physics_2016_s": {"name": "Physics 2016 සිංහල", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"}
+    "physics_2016_s": {"name": "Physics 2016 සිංහල", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"} # කලින් දුන්න එක
 }
 
 def download_gdrive(file_id):
     URL = "https://docs.google.com/uc?export=download&confirm=t"
     session = requests.Session()
     response = session.get(URL, params={'id': file_id}, stream=True)
-
-    # Virus scan bypass
     for key, value in response.cookies.items():
         if key.startswith('download_warning'):
             response = session.get(URL, params={'id': file_id, 'confirm': value}, stream=True)
@@ -47,11 +45,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = await query.message.reply_text(f"⏳ {paper['name']} එවනවා...")
     try:
         r = download_gdrive(paper['id'])
-
-        # File size check
         size_mb = int(r.headers.get('Content-Length', 0)) / 1024 / 1024
+
         if size_mb > 49:
-            await msg.edit_text(f"❌ {paper['name']} File එක {size_mb:.1f}MB. Telegram 50MB Limit එක නිසා Send කරන්න බෑ 😔\n\nLink එක: https://drive.google.com/file/d/{paper['id']}/view")
+            await msg.edit_text(f"❌ {paper['name']} = {size_mb:.1f}MB\nTelegram 50MB Limit 😔\n\nDirect Link: https://drive.google.com/file/d/{paper['id']}/view")
             return
 
         if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
@@ -62,7 +59,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await msg.delete()
         else:
-            await msg.edit_text("❌ Link එකට Access නෑ මචං. Drive එකේ 'Anyone with the link' Share කරලද බලපන් 😔")
+            await msg.edit_text("❌ Link එකට Access නෑ. Drive එකේ 'Anyone with the link' දාලද බලපන් 😔")
 
     except Exception as e:
         await msg.edit_text(f"❌ Error: {str(e)[:100]}")
