@@ -24,7 +24,7 @@ PAPERS = {
     },
     "physics_2017_s": {
         "name": "Physics 2017 සිංහල",
-        "url": "https://drive.google.com/uc?export=download&id=1HWCycDpK82X6ENdrc775BIr3x-CVBAYx" # ⚠️ Same as 2018. Double check!
+        "url": "https://drive.google.com/uc?export=download&id=1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"
     },
     "physics_2016_s": {
         "name": "Physics 2016 සිංහල",
@@ -59,11 +59,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_document(
                 document=r.content,
                 filename=f"{paper['name']}.pdf",
-                caption=f"✅ {paper['name']} | @YourBotName"
+                caption=f"✅ {paper['name']} | Good Luck!"
             )
             await msg.delete()
         elif 'text/html' in r.headers.get('Content-Type', ''):
-            await msg.edit_text("❌ Link එකට Access නෑ මචං. 'Anyone with the link' Share කරලද බලපන් 😔")
+            await msg.edit_text("❌ Link එකට Access නෑ මචං. Drive එකේ 'Anyone with the link' Share කරලද බලපන් 😔")
         else:
             await msg.edit_text(f"❌ Error {r.status_code}")
 
