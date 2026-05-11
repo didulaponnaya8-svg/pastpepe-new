@@ -1,40 +1,48 @@
 import os
 import requests
-from io import BytesIO
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
-BOT_USERNAME = "@pastdlbbot_bot"
 
-# 🔥 DIRECT GOOGLE DRIVE LINKS - 100% වැඩ කරනවා. මම test කරා.
 PAPERS = {
-    "al_physics_2021": {
-        "name": "A/L Physics 2021",
-        "url": "https://drive.google.com/uc?export=download&id=1hNXJ8QafE0hOaIFaMmQuns6n8dlz6WAS"
+    "physics_2021_s": {
+        "name": "Physics 2021 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1CYSZGiAl9gvpo62qH-1qiQvlN_N2odyA&export=download"
     },
-    "al_physics_2020": {
-        "name": "A/L Physics 2020", 
-        "url": "https://drive.google.com/uc?export=download&id=1QKqJ8X9fKZ9rK9rK9rK9rK9rK9rK9rK9"
+    "physics_2020_s": {
+        "name": "Physics 2020 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1DEd8pqHnMCEzvdQX7mpfmBSmPm4IrNqL&export=download"
     },
-    "al_chemistry_2021": {
-        "name": "A/L Chemistry 2021",
-        "url": "https://drive.google.com/uc?export=download&id=1pQnQnQnQnQnQ"
+    "physics_2019_s": {
+        "name": "Physics 2019 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1uIr8Kxv1TZVyasyKd5VoAjhiAD7PA3oo&export=download"
+    },
+    "physics_2018_s": {
+        "name": "Physics 2018 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1h0hQcB6RJuuLQ5ZwRLtyDPsY-pCogI3F&export=download"
+    },
+    "physics_2017_s": {
+        "name": "Physics 2017 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1OtltqF7TuP9VojH11pnun00MK7Jr1EV-&export=download"
+    },
+    "physics_2016_s": {
+        "name": "Physics 2016 සිංහල",
+        "url": "https://drive.usercontent.google.com/download?id=1elMWQUTtOpBMaXK9puNA090R1lrStlaY&export=download"
     }
 }
 
 def main_menu():
     keyboard = []
-    for key, data in PAPERS.items():
-        keyboard.append([InlineKeyboardButton(f"📚 {data['name']}", callback_data=key)])
+    # අලුත්ම Paper එක උඩට එන්න Sort කරපන්
+    sorted_papers = dict(sorted(PAPERS.items(), key=lambda x: x[0], reverse=True))
+    for key, data in sorted_papers.items():
+        keyboard.append([InlineKeyboardButton(f"📘 {data['name']}", callback_data=key)])
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        f"📚 *PastPaper LK Bot* 📚\n\n"
-        f"✅ Direct Download - No 404\n"
-        f"✅ Tested & Working\n\n"
-        f"👇 Paper එකක් තෝරන්න",
+        "📚 *A/L Physics Past Papers සිංහල*\n*2016 - 2021*\n\nඕන අවුරුද්ද Select කරපන් 👇",
         parse_mode='Markdown',
         reply_markup=main_menu()
     )
@@ -42,42 +50,25 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    paper_key = query.data
-
-    if paper_key in PAPERS:
-        paper = PAPERS[paper_key]
-        msg = await query.message.reply_text(f"⏳ {paper['name']} බානවා...\n\n1-2 min ඉන්න...")
-
-        try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            r = requests.get(paper['url'], headers=headers, timeout=120, stream=True)
-            
-            if r.status_code == 200:
-                pdf_file = BytesIO()
-                for chunk in r.iter_content(chunk_size=8192):
-                    pdf_file.write(chunk)
-                
-                pdf_file.seek(0)
-                pdf_file.name = f"{paper['name'].replace(' ', '_')}.pdf"
-
-                await query.message.reply_document(
-                    document=pdf_file,
-                    caption=f"✅ {paper['name']}\n\n📥 Download Complete!\n\nBot: {BOT_USERNAME}"
-                )
-                await msg.delete()
-            else:
-                await msg.edit_text(f"❌ Download Failed. Status: {r.status_code}\n\nGoogle Drive link එක අවුල්. මට කියපන්.")
-
-        except Exception as e:
-            await msg.edit_text(f"❌ Error: {str(e)}\n\nNet අවුලක්. ආයෙ try කරන්න.")
+    paper = PAPERS[query.data]
+    msg = await query.message.reply_text(f"⏳ {paper['name']} එවනවා...")
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        r = requests.get(paper['url'], headers=headers, timeout=90)
+        if r.status_code == 200 and 'application/pdf' in r.headers.get('Content-Type', ''):
+            await query.message.reply_document(
+                document=r.content,
+                filename=f"{paper['name']}.pdf",
+                caption=f"✅ {paper['name']}"
+            )
+            await msg.delete()
+        else:
+            await msg.edit_text(f"❌ Error {r.status_code}. Link එක Expired වෙන්න ඇති.")
+    except Exception as e:
+        await msg.edit_text(f"❌ Error: {str(e)[:100]}")
 
 if __name__ == '__main__':
-    if not BOT_TOKEN:
-        raise ValueError("BOT_TOKEN environment variable එක Render එකේ දාපන්!")
-
-    print("Bot Starting...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot is Live ✅")
     app.run_polling()
