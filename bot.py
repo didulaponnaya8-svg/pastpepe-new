@@ -4,9 +4,9 @@ import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
 LOGO_FILE = "logo.png"
-ADMIN_ID = 123456789 # << උඹේ ID එක දාපන්
+ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
 
 SUBJECTS = {
