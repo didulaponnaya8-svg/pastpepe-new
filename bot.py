@@ -339,6 +339,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(stats, show_alert=True)
         return
 
+    # ============= FIXED SPLIT LOGIC =============
     if data.startswith("stream_"):
         stream_key = data.replace("stream_", "", 1)
         stream = STREAMS[stream_key]
@@ -354,6 +355,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data.startswith("sub_"):
+        # FIX: maxsplit=2 දාලා 3 කෑලි විතරයි ගන්නෙ
         parts = data.split("_", 2)
         stream_key = parts[1]
         subject_key = parts[2]
@@ -373,6 +375,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data.startswith("paper_"):
+        # FIX: maxsplit=3 දාලා 4 කෑලි විතරයි ගන්නෙ
         parts = data.split("_", 3)
         stream_key = parts[1]
         subject_key = parts[2]
@@ -387,21 +390,40 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = await query.message.reply_text(f"⏳ Downloading...\n{sub['emoji']} {sub['name']} {paper['year']}")
         try:
             r = download_gdrive(paper['id'])
+            r.raise_for_status()
+
             size_bytes = int(r.headers.get('Content-Length', 0))
             size_mb = size_bytes / 1024 / 1024
 
-            await msg.edit_text(f"📤 Uploading...\n{sub['emoji']} {sub['name']} {paper['year']}")
+            if size_mb > 49:
+                await msg.edit_text(
+                    f"❌ File Size ලොකුයි: {size_mb:.1f}MB\n\n"
+                    f"📄 {sub['name']} {paper['year']}\n\n"
+                    f"Telegram Limit: 50MB\n"
+                    f"Direct Link: https://drive.google.com/file/d/{paper['id']}/view"
+                )
+                return
+
+            await msg.edit_text(f"📤 Uploading... {size_mb:.1f}MB\n{sub['emoji']} {sub['name']} {paper['year']}")
+
             await query.message.reply_document(
                 document=r.content,
-                filename=f"A/L_{sub['name']}_{paper['year']}_Sinhala.pdf",
+                filename=f"AL_{sub['name']}_{paper['year']}_Sinhala.pdf",
                 caption=f"✅ {sub['emoji']} {sub['name']} {paper['year']} Sinhala\n💾 Size: {size_mb:.1f}MB\n\n_𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰_"
             )
             await msg.delete()
+        except requests.exceptions.RequestException as e:
+            await msg.edit_text(
+                f"❌ Download Error\n\n"
+                f"📄 {sub['name']} {paper['year']}\n"
+                f"🔗 File එක Public කරලා නෑ\n\n"
+                f"Google Drive → Share → Anyone with the link → Viewer දාන්න"
+            )
         except Exception as e:
             await msg.edit_text(
-                f"❌ Error: File එක Public කරලා නෑ\n\n"
-                f"📄 {sub['name']} {paper['year']}\n\n"
-                f"Share → Anyone with the link → Viewer දාන්න"
+                f"❌ Upload Error\n\n"
+                f"📄 {sub['name']} {paper['year']}\n"
+                f"Error: {str(e)[:200]}"
             )
 
 if __name__ == '__main__':
@@ -409,5 +431,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v10.3")
+    print("Bot Started - Lanka Paper Hub v10.5")
     app.run_polling()
