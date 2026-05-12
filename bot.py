@@ -5,8 +5,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
-LOGO_FILE = "logo.png" # Render එකට logo.png Upload කරපන්
-ADMIN_ID = 123456789 # << උඹේ ID එක දාපන් @userinfobot එකෙන්
+LOGO_FILE = "logo.png"
+ADMIN_ID = 8231869218 # << උඹේ ID එක දාපන් @userinfobot එකෙන්
 USERS_FILE = "users.json"
 
 SUBJECTS = {
@@ -47,23 +47,6 @@ SUBJECTS = {
             "bio_2015": {"year": "2015", "id": "1uyfLx5tIoaEkZuu9-S9iJXkoK1w5YH5u"},
             "bio_2013": {"year": "2013", "id": "1US231ibZFSYwVqEQWmfFXrI2KYumY-S1"},
             "bio_2011": {"year": "2011", "id": "1dsc1-TXuXySD2Tb26pZafqZLoZUL3DBy"}
-        }
-    },
-    "maths": {
-        "name": "📐 Combined Maths", "emoji": "📐", "years": "2012-2023",
-        "papers": {
-            "maths_2023": {"year": "2023", "id": "1UwCR0d--pDEGwdiK9hwuIMRnSYpiw-7Z"},
-            "maths_2022": {"year": "2022", "id": "19F-Q8jYfIwGXvVO9SCpeTlqN003Syq3A"},
-            "maths_2021": {"year": "2021", "id": "1TuVDuV_WPV8lIdTI1_U_B4e7XVMECv5d"},
-            "maths_2020": {"year": "2020", "id": "14VFJKE0wPuurBzJnY2_yVYq8st6mCRr7"},
-            "maths_2019": {"year": "2019", "id": "1-Mp8RFORpf1vXw_-547olWS5Ema-NNKO"},
-            "maths_2018": {"year": "2018", "id": "1DILTRLHAsasTPEeO31_aOvP63xvUA1jD"},
-            "maths_2017": {"year": "2017", "id": "1FH8POD5jAEP1zlMV-Df6d4YiTtwkUR55"},
-            "maths_2016": {"year": "2016", "id": "1x5X4GOnkM56waRoSjpZW21ijNf62i39v"},
-            "maths_2015": {"year": "2015", "id": "1WPASU4XjshbDAcjDN08O452oJ3J3ZdOu"},
-            "maths_2014": {"year": "2014", "id": "1USBVSnWN3HoKz0N_c1j2w7x0xmtA_436"},
-            "maths_2013": {"year": "2013", "id": "1rV1FfRrLZViSyhdBscYiwU3Z0HRBJGqc"},
-            "maths_2012": {"year": "2012", "id": "1KnfBXqXDt8XdQgo-fJ23N3dXVYM3iNnS"}
         }
     }
 }
@@ -133,7 +116,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     caption = f"""
 🌟 *𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰* 🌟
 ━━━━━━━━━━━━━━━━━━━━
-⚛️ Physics | 🧪 Chemistry | 🧬 Biology | 📐 Maths
+⚛️ Physics | 🧪 Chemistry | 🧬 Biology
 📚 *A/L Past Papers Sinhala Medium*
 ━━━━━━━━━━━━━━━━━━━━
 👇 *Select Subject Below*
@@ -174,7 +157,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         caption = f"""
 🌟 *𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰* 🌟
 ━━━━━━━━━━━━━━━━━━━━
-⚛️ Physics | 🧪 Chemistry | 🧬 Biology | 📐 Maths
+⚛️ Physics | 🧪 Chemistry | 🧬 Biology
 📚 *A/L Past Papers Sinhala Medium*
 ━━━━━━━━━━━━━━━━━━━━
 👇 *Select Subject Below*
@@ -211,7 +194,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = await query.message.reply_text(f"⏳ *Downloading...*\n{sub['emoji']} {sub['name']} {paper['year']}", parse_mode='Markdown')
         try:
             r = download_gdrive(paper['id'])
-            size_mb = int(r.headers.get('Content-Length', 0)) / 1024
+            size_mb = int(r.headers.get('Content-Length', 0)) / 1024 / 1024
             if size_mb > 49:
                 await msg.edit_text(f"❌ *File Too Large*\n━━━━━━━━━━━━━━━━━━━━\n📄 {sub['name']} {paper['year']}\n💾 Size: {size_mb:.1f}MB\n\n📎 *Direct Download:*\nhttps://drive.google.com/file/d/{paper['id']}/view", parse_mode='Markdown')
                 return
