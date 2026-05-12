@@ -11,8 +11,8 @@ ADMIN_ID = 123456789 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
 
 # ============= මේ දෙක හරියටම දාපන් =============
-CHANNEL_USERNAME = "@LankaPaperHub" # @ එක්ක Username
-CHANNEL_LINK = "https://t.me/LankaPaperHub" # Full Link
+CHANNEL_USERNAME = "@sl_paperhub" # @ එක්ක Username
+CHANNEL_LINK = "https://t.me/sl_paperhub" # Full Link
 # ================================================
 
 # ============= STREAMS + SUBJECTS =============
