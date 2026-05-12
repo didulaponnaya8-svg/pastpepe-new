@@ -1,21 +1,22 @@
 import os
 import requests
 import json
+import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 from telegram.error import BadRequest
 
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 8486116629 # << උඹේ Telegram ID එක දාපන්
+ADMIN_ID = 8486116629
 USERS_FILE = "users.json"
 
-# ============= මේ දෙක හරියටම දාපන් =============
-CHANNEL_USERNAME = "@sl_paperhub" # @ එක්ක Username
-CHANNEL_LINK = "https://t.me/sl_paperhub" # Full Link
-# ================================================
+CHANNEL_USERNAME = "@sl_paperhub"
+CHANNEL_LINK = "https://t.me/sl_paperhub"
 
-# ============= STREAMS + SUBJECTS =============
 STREAMS = {
     "bio_stream": {
         "name": "🧬 Bio Stream", "emoji": "🧬",
@@ -212,7 +213,6 @@ def papers_menu(stream_key, subject_key):
     return InlineKeyboardMarkup(keyboard)
 
 async def send_new_message(query, text, reply_markup):
-    """Delete old message and send new one - Works 100%"""
     try:
         await query.message.delete()
     except:
@@ -221,6 +221,7 @@ async def send_new_message(query, text, reply_markup):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    logging.info(f"Start command from user {user_id}")
 
     if not await is_user_joined(user_id, context):
         caption = f"""
@@ -285,6 +286,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
     user_id = query.from_user.id
+    logging.info(f"Button pressed: {data} by user {user_id}")
 
     if data == "noop":
         return
@@ -411,10 +413,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Error: {str(e)[:200]}"
             )
 
+async def post_init(application):
+    # Conflict Fix: Bot start වෙන්න කලින් Webhook + Pending Updates ඔක්කොම Clear කරනවා
+    await application.bot.delete_webhook(drop_pending_updates=True)
+    logging.info("Webhook deleted, polling started")
+
 if __name__ == '__main__':
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v10.7")
+
+    logging.info("Bot Started - Lanka Paper Hub v10.9 Polling")
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
