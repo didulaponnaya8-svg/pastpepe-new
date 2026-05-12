@@ -10,7 +10,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
+ADMIN_ID = 8486116629
 USERS_FILE = "users.json"
 
 CHANNEL_USERNAME = "@sl_paperhub"
@@ -210,9 +210,20 @@ def papers_menu(stream_key, subject_key):
     keyboard.append([InlineKeyboardButton("🔙 Back to Stream", callback_data=f"stream_{stream_key}")])
     return InlineKeyboardMarkup(keyboard)
 
-async def send_menu(chat_id, context, text, reply_markup):
-    """Always send new message - No edit_caption errors"""
-    await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
+async def safe_send_or_edit(query, context, text, reply_markup):
+    """SAFE: Send new message first, then delete old. Never lose data"""
+    chat_id = query.message.chat_id
+
+    # 1. Send new message FIRST
+    new_msg = await context.bot.send_message(chat_id=chat_id, text=text, reply_markup=reply_markup)
+
+    # 2. Delete old message AFTER new one is sent
+    try:
+        await query.message.delete()
+    except:
+        pass
+
+    return new_msg
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -271,14 +282,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
     user_id = query.from_user.id
-    chat_id = query.message.chat_id
     logging.info(f"Button: {data} by {user_id}")
-
-    # Delete old message to prevent edit_caption errors
-    try:
-        await query.message.delete()
-    except:
-        pass
 
     if data == "noop":
         return
@@ -296,14 +300,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
             """
-            await send_menu(chat_id, context, text, main_menu())
+            await safe_send_or_edit(query, context, text, main_menu())
         else:
-            await context.bot.send_message(chat_id=chat_id, text=f"❌ You haven't joined {CHANNEL_USERNAME} yet!", reply_markup=join_channel_menu())
+            await query.answer(f"❌ You haven't joined {CHANNEL_USERNAME} yet!", show_alert=True)
         return
 
     if not await is_user_joined(user_id, context):
         text = f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!"
-        await send_menu(chat_id, context, text, join_channel_menu())
+        await safe_send_or_edit(query, context, text, join_channel_menu())
         return
 
     if data == "main_menu":
@@ -315,7 +319,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
         """
-        await send_menu(chat_id, context, text, main_menu())
+        await safe_send_or_edit(query, context, text, main_menu())
         return
 
     if data == "stats":
@@ -324,8 +328,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             total = sum(len(s["papers"]) for s in stream_data["subjects"].values())
             stats += f"{stream_data['emoji']} {stream_data['name']}: {total} Papers\n"
         stats += f"━━━━━━━━━━━━━━━━━━━━\n🎯 Total: {get_total_papers()} Papers\n👥 Users: {len(load_users())}"
-        await context.bot.send_message(chat_id=chat_id, text=stats)
-        await send_menu(chat_id, context, "🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟\n━━━━━━━━━━━━━━━━━━━━\n👇 Select Stream Below", main_menu())
+        await query.answer(stats, show_alert=True)
         return
 
     if data.startswith("stream_"):
@@ -336,7 +339,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Subject Below
         """
-        await send_menu(chat_id, context, text, stream_menu(stream_key))
+        await safe_send_or_edit(query, context, text, stream_menu(stream_key))
         return
 
     if data.startswith("sub_"):
@@ -353,7 +356,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Year Below
         """
-        await send_menu(chat_id, context, text, papers_menu(stream_key, subject_key))
+        await safe_send_or_edit(query, context, text, papers_menu(stream_key, subject_key))
         return
 
     if data.startswith("paper_"):
@@ -365,10 +368,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         sub = STREAMS[stream_key]["subjects"][subject_key]
 
         if "PASTE_" in paper['id']:
-            await context.bot.send_message(chat_id=chat_id, text=f"⚠️ {sub['name']} {paper['year']} Paper එක තාම Add කරලා නෑ මචං")
+            await context.bot.send_message(chat_id=query.message.chat_id, text=f"⚠️ {sub['name']} {paper['year']} Paper එක තාම Add කරලා නෑ මචං")
             return
 
-        msg = await context.bot.send_message(chat_id=chat_id, text=f"⏳ Downloading...\n{sub['emoji']} {sub['name']} {paper['year']}")
+        msg = await context.bot.send_message(chat_id=query.message.chat_id, text=f"⏳ Downloading...\n{sub['emoji']} {sub['name']} {paper['year']}")
         try:
             r = download_gdrive(paper['id'])
             r.raise_for_status()
@@ -386,7 +389,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await msg.edit_text(f"📤 Uploading... {size_mb:.1f}MB\n{sub['emoji']} {sub['name']} {paper['year']}")
             await context.bot.send_document(
-                chat_id=chat_id,
+                chat_id=query.message.chat_id,
                 document=r.content,
                 filename=f"AL_{sub['name']}_{paper['year']}_Sinhala.pdf",
                 caption=f"✅ {sub['emoji']} {sub['name']} {paper['year']} Sinhala\n💾 Size: {size_mb:.1f}MB\n\n_𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰_"
@@ -403,7 +406,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await msg.edit_text(f"❌ Error: {str(e)[:200]}")
 
 def main():
-    # Delete webhook before starting - Fix for Conflict
+    # Delete webhook before starting
     logging.info("Deleting webhook...")
     try:
         requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook", data={"drop_pending_updates": True})
@@ -416,7 +419,7 @@ def main():
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    logging.info("Bot Started - Lanka Paper Hub v11.2")
+    logging.info("Bot Started - Lanka Paper Hub v11.3")
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
