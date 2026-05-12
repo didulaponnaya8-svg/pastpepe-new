@@ -3,69 +3,233 @@ import requests
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.error import BadRequest
 
 BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
 LOGO_FILE = "logo.png"
 ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
+CHANNEL_ID = "@sl_paperhub" # << උඹේ Channel Username දාපන් @ එක්ක
+CHANNEL_LINK = "https://t.me/sl_paperhub" # << උඹේ Channel Link එක
 
-SUBJECTS = {
-    "physics": {
-        "name": "⚛️ Physics", "emoji": "⚛️", "years": "2016-2021",
-        "papers": {
-            "phy_2021": {"year": "2021", "id": "1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"},
-            "phy_2020": {"year": "2020", "id": "1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"},
-            "phy_2019": {"year": "2019", "id": "1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"},
-            "phy_2018": {"year": "2018", "id": "1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"},
-            "phy_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
-            "phy_2016": {"year": "2016", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"}
+# ============= STREAMS + SUBJECTS =============
+STREAMS = {
+    "bio_stream": {
+        "name": "🧬 Bio Stream", "emoji": "🧬",
+        "subjects": {
+            "biology": {
+                "name": "🧬 Biology", "emoji": "🧬", "years": "2011-2023",
+                "papers": {
+                    "bio_2023": {"year": "2023", "id": "1dsc1-TXuXySD2Tb26pZafqZLoZUL3DBy"},
+                    "bio_2022": {"year": "2022", "id": "1US231ibZFSYwVqEQWmfFXrI2KYumY-S1"},
+                    "bio_2021": {"year": "2021", "id": "1U7fnfUZ6wsslU7L7eAxZXXTgEjViKdEm"},
+                    "bio_2020": {"year": "2020", "id": "1uyfLx5tIoaEkZuu9-S9iJXkoK1w5YH5u"},
+                    "bio_2019": {"year": "2019", "id": "1yWEcJFPxXmHsWqtN-mZWb3vytfq_RWAv"},
+                    "bio_2018": {"year": "2018", "id": "1LNL7D8cRJekekfuGCUMkCXoDdBqeqw-g"},
+                    "bio_2017": {"year": "2017", "id": "1fCEvtD07JA32TwP_pudB31mptU-MVE3-"},
+                    "bio_2016": {"year": "2016", "id": "1qd3D35yz-TglQ_3yJDcqPm7f7Vj8Uxjx"},
+                    "bio_2015": {"year": "2015", "id": "1OcaqyWatw1E9AU6gsbhyDOJSUyEnXOFL"},
+                    "bio_2014": {"year": "2014", "id": "1tO8s6-fFa9QEoHVF14LDeSWq9CTKV2Vg"},
+                    "bio_2013": {"year": "2013", "id": "1-w0U7c_rP_sUzTwNXJjiuCvAoHIc3IJg"},
+                    "bio_2012": {"year": "2012", "id": "1Vple1rcjSM_ZCB2hFpHi2g26ZwOmnqFD"},
+                    "bio_2011": {"year": "2011", "id": "1m46B0XwT0wILto45xmfJbLVyVO7SotwI"}
+                }
+            },
+            "physics": {
+                "name": "⚛️ Physics", "emoji": "⚛️", "years": "2016-2021",
+                "papers": {
+                    "phy_2021": {"year": "2021", "id": "1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"},
+                    "phy_2020": {"year": "2020", "id": "1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"},
+                    "phy_2019": {"year": "2019", "id": "1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"},
+                    "phy_2018": {"year": "2018", "id": "1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"},
+                    "phy_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
+                    "phy_2016": {"year": "2016", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"}
+                }
+            },
+            "chemistry": {
+                "name": "🧪 Chemistry", "emoji": "🧪", "years": "2016-2024",
+                "papers": {
+                    "chem_2024": {"year": "2024", "id": "1i6JkE6gvFfa4I5Z8AiGFClmKDECCIifg"},
+                    "chem_2021": {"year": "2021", "id": "1nBr3BIdVWEgfOPNw1auOYdE6x9N-k6mu"},
+                    "chem_2020": {"year": "2020", "id": "1EjtW5p8HuOAo4QH5RBpHXi1FxvxZpk0I"},
+                    "chem_2019": {"year": "2019", "id": "1r8ugsWaHd7B1Rk56fr__hR1TCKhoLRIx"},
+                    "chem_2018": {"year": "2018", "id": "1FNKEb3ElNF-K830K93g87Q0uAvIqoXnm"},
+                    "chem_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
+                    "chem_2016": {"year": "2016", "id": "1XqsC_8__XMv6XhkABCIqBeu2FZk7wMzX"}
+                }
+            },
+            "maths": {
+                "name": "📐 Combined Maths", "emoji": "📐", "years": "2012-2023",
+                "papers": {
+                    "maths_2023": {"year": "2023", "id": "1KnfBXqXDt8XdQgo-fJ23N3dXVYM3iNnS"},
+                    "maths_2022": {"year": "2022", "id": "1rV1FfRrLZViSyhdBscYiwU3Z0HRBJGqc"},
+                    "maths_2021": {"year": "2021", "id": "1USBVSnWN3HoKz0N_c1j2w7x0xmtA_436"},
+                    "maths_2020": {"year": "2020", "id": "1WPASU4XjshbDAcjDN08O452oJ3J3ZdOu"},
+                    "maths_2019": {"year": "2019", "id": "1x5X4GOnkM56waRoSjpZW21ijNf62i39v"},
+                    "maths_2018": {"year": "2018", "id": "1FH8POD5jAEP1zlMV-Df6d4YiTtwkUR55"},
+                    "maths_2017": {"year": "2017", "id": "1DILTRLHAsasTPEeO31_aOvP63xvUA1jD"},
+                    "maths_2016": {"year": "2016", "id": "1-Mp8RFORpf1vXw_-547olWS5Ema-NNKO"},
+                    "maths_2015": {"year": "2015", "id": "14VFJKE0wPuurBzJnY2_yVYq8st6mCRr7"},
+                    "maths_2014": {"year": "2014", "id": "1TuVDuV_WPV8lIdTI1_U_B4e7XVMECv5d"},
+                    "maths_2013": {"year": "2013", "id": "19F-Q8jYfIwGXvVO9SCpeTlqN003Syq3A"},
+                    "maths_2012": {"year": "2012", "id": "1UwCR0d--pDEGwdiK9hwuIMRnSYpiw-7Z"}
+                }
+            },
+            "agri": {
+                "name": "🌾 Agri Science", "emoji": "🌾", "years": "2015-2023",
+                "papers": {
+                    "agri_2023": {"year": "2023", "id": "PASTE_2023_AGRI_ID"},
+                    "agri_2022": {"year": "2022", "id": "PASTE_2022_AGRI_ID"},
+                    "agri_2021": {"year": "2021", "id": "PASTE_2021_AGRI_ID"},
+                    "agri_2020": {"year": "2020", "id": "PASTE_2020_AGRI_ID"},
+                    "agri_2019": {"year": "2019", "id": "PASTE_2019_AGRI_ID"},
+                    "agri_2018": {"year": "2018", "id": "PASTE_2018_AGRI_ID"},
+                    "agri_2017": {"year": "2017", "id": "PASTE_2017_AGRI_ID"},
+                    "agri_2016": {"year": "2016", "id": "PASTE_2016_AGRI_ID"},
+                    "agri_2015": {"year": "2015", "id": "PASTE_2015_AGRI_ID"}
+                }
+            }
         }
     },
-    "chemistry": {
-        "name": "🧪 Chemistry", "emoji": "🧪", "years": "2016-2024",
-        "papers": {
-            "chem_2024": {"year": "2024", "id": "1i6JkE6gvFfa4I5Z8AiGFClmKDECCIifg"},
-            "chem_2021": {"year": "2021", "id": "1nBr3BIdVWEgfOPNw1auOYdE6x9N-k6mu"},
-            "chem_2020": {"year": "2020", "id": "1EjtW5p8HuOAo4QH5RBpHXi1FxvxZpk0I"},
-            "chem_2019": {"year": "2019", "id": "1r8ugsWaHd7B1Rk56fr__hR1TCKhoLRIx"},
-            "chem_2018": {"year": "2018", "id": "1FNKEb3ElNF-K830K93g87Q0uAvIqoXnm"},
-            "chem_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
-            "chem_2016": {"year": "2016", "id": "1XqsC_8__XMv6XhkABCIqBeu2FZk7wMzX"}
+    "commerce": {
+        "name": "💼 Commerce", "emoji": "💼",
+        "subjects": {
+            "econ": {
+                "name": "📊 Economics", "emoji": "📊", "years": "2015-2023",
+                "papers": {
+                    "econ_2023": {"year": "2023", "id": "PASTE_2023_ECON_ID"},
+                    "econ_2022": {"year": "2022", "id": "PASTE_2022_ECON_ID"},
+                    "econ_2021": {"year": "2021", "id": "PASTE_2021_ECON_ID"},
+                    "econ_2020": {"year": "2020", "id": "PASTE_2020_ECON_ID"},
+                    "econ_2019": {"year": "2019", "id": "PASTE_2019_ECON_ID"},
+                    "econ_2018": {"year": "2018", "id": "PASTE_2018_ECON_ID"},
+                    "econ_2017": {"year": "2017", "id": "PASTE_2017_ECON_ID"},
+                    "econ_2016": {"year": "2016", "id": "PASTE_2016_ECON_ID"},
+                    "econ_2015": {"year": "2015", "id": "PASTE_2015_ECON_ID"}
+                }
+            },
+            "account": {
+                "name": "💰 Accounting", "emoji": "💰", "years": "2015-2023",
+                "papers": {
+                    "acc_2023": {"year": "2023", "id": "PASTE_2023_ACC_ID"},
+                    "acc_2022": {"year": "2022", "id": "PASTE_2022_ACC_ID"},
+                    "acc_2021": {"year": "2021", "id": "PASTE_2021_ACC_ID"},
+                    "acc_2020": {"year": "2020", "id": "PASTE_2020_ACC_ID"},
+                    "acc_2019": {"year": "2019", "id": "PASTE_2019_ACC_ID"},
+                    "acc_2018": {"year": "2018", "id": "PASTE_2018_ACC_ID"},
+                    "acc_2017": {"year": "2017", "id": "PASTE_2017_ACC_ID"},
+                    "acc_2016": {"year": "2016", "id": "PASTE_2016_ACC_ID"},
+                    "acc_2015": {"year": "2015", "id": "PASTE_2015_ACC_ID"}
+                }
+            },
+            "business": {
+                "name": "🏢 Business Studies", "emoji": "🏢", "years": "2015-2023",
+                "papers": {
+                    "bs_2023": {"year": "2023", "id": "PASTE_2023_BS_ID"},
+                    "bs_2022": {"year": "2022", "id": "PASTE_2022_BS_ID"},
+                    "bs_2021": {"year": "2021", "id": "PASTE_2021_BS_ID"},
+                    "bs_2020": {"year": "2020", "id": "PASTE_2020_BS_ID"},
+                    "bs_2019": {"year": "2019", "id": "PASTE_2019_BS_ID"},
+                    "bs_2018": {"year": "2018", "id": "PASTE_2018_BS_ID"},
+                    "bs_2017": {"year": "2017", "id": "PASTE_2017_BS_ID"},
+                    "bs_2016": {"year": "2016", "id": "PASTE_2016_BS_ID"},
+                    "bs_2015": {"year": "2015", "id": "PASTE_2015_BS_ID"}
+                }
+            }
         }
     },
-    "biology": {
-        "name": "🧬 Biology", "emoji": "🧬", "years": "2011-2023",
-        "papers": {
-            "bio_2023": {"year": "2023", "id": "1dsc1-TXuXySD2Tb26pZafqZLoZUL3DBy"},
-            "bio_2022": {"year": "2022", "id": "1US231ibZFSYwVqEQWmfFXrI2KYumY-S1"},
-            "bio_2021": {"year": "2021", "id": "1U7fnfUZ6wsslU7L7eAxZXXTgEjViKdEm"},
-            "bio_2020": {"year": "2020", "id": "1uyfLx5tIoaEkZuu9-S9iJXkoK1w5YH5u"},
-            "bio_2019": {"year": "2019", "id": "1yWEcJFPxXmHsWqtN-mZWb3vytfq_RWAv"},
-            "bio_2018": {"year": "2018", "id": "1LNL7D8cRJekekfuGCUMkCXoDdBqeqw-g"},
-            "bio_2017": {"year": "2017", "id": "1fCEvtD07JA32TwP_pudB31mptU-MVE3-"},
-            "bio_2016": {"year": "2016", "id": "1qd3D35yz-TglQ_3yJDcqPm7f7Vj8Uxjx"},
-            "bio_2015": {"year": "2015", "id": "1OcaqyWatw1E9AU6gsbhyDOJSUyEnXOFL"},
-            "bio_2014": {"year": "2014", "id": "1tO8s6-fFa9QEoHVF14LDeSWq9CTKV2Vg"},
-            "bio_2013": {"year": "2013", "id": "1-w0U7c_rP_sUzTwNXJjiuCvAoHIc3IJg"},
-            "bio_2012": {"year": "2012", "id": "1Vple1rcjSM_ZCB2hFpHi2g26ZwOmnqFD"},
-            "bio_2011": {"year": "2011", "id": "1m46B0XwT0wILto45xmfJbLVyVO7SotwI"}
+    "arts": {
+        "name": "🎨 Arts", "emoji": "🎨",
+        "subjects": {
+            "sinhala": {
+                "name": "📚 Sinhala", "emoji": "📚", "years": "2015-2023",
+                "papers": {
+                    "sin_2023": {"year": "2023", "id": "PASTE_2023_SIN_ID"},
+                    "sin_2022": {"year": "2022", "id": "PASTE_2022_SIN_ID"},
+                    "sin_2021": {"year": "2021", "id": "PASTE_2021_SIN_ID"},
+                    "sin_2020": {"year": "2020", "id": "PASTE_2020_SIN_ID"},
+                    "sin_2019": {"year": "2019", "id": "PASTE_2019_SIN_ID"},
+                    "sin_2018": {"year": "2018", "id": "PASTE_2018_SIN_ID"},
+                    "sin_2017": {"year": "2017", "id": "PASTE_2017_SIN_ID"},
+                    "sin_2016": {"year": "2016", "id": "PASTE_2016_SIN_ID"},
+                    "sin_2015": {"year": "2015", "id": "PASTE_2015_SIN_ID"}
+                }
+            },
+            "history": {
+                "name": "🏛️ History", "emoji": "🏛️", "years": "2015-2023",
+                "papers": {
+                    "his_2023": {"year": "2023", "id": "PASTE_2023_HIS_ID"},
+                    "his_2022": {"year": "2022", "id": "PASTE_2022_HIS_ID"},
+                    "his_2021": {"year": "2021", "id": "PASTE_2021_HIS_ID"},
+                    "his_2020": {"year": "2020", "id": "PASTE_2020_HIS_ID"},
+                    "his_2019": {"year": "2019", "id": "PASTE_2019_HIS_ID"},
+                    "his_2018": {"year": "2018", "id": "PASTE_2018_HIS_ID"},
+                    "his_2017": {"year": "2017", "id": "PASTE_2017_HIS_ID"},
+                    "his_2016": {"year": "2016", "id": "PASTE_2016_HIS_ID"},
+                    "his_2015": {"year": "2015", "id": "PASTE_2015_HIS_ID"}
+                }
+            },
+            "geography": {
+                "name": "🌍 Geography", "emoji": "🌍", "years": "2015-2023",
+                "papers": {
+                    "geo_2023": {"year": "2023", "id": "PASTE_2023_GEO_ID"},
+                    "geo_2022": {"year": "2022", "id": "PASTE_2022_GEO_ID"},
+                    "geo_2021": {"year": "2021", "id": "PASTE_2021_GEO_ID"},
+                    "geo_2020": {"year": "2020", "id": "PASTE_2020_GEO_ID"},
+                    "geo_2019": {"year": "2019", "id": "PASTE_2019_GEO_ID"},
+                    "geo_2018": {"year": "2018", "id": "PASTE_2018_GEO_ID"},
+                    "geo_2017": {"year": "2017", "id": "PASTE_2017_GEO_ID"},
+                    "geo_2016": {"year": "2016", "id": "PASTE_2016_GEO_ID"},
+                    "geo_2015": {"year": "2015", "id": "PASTE_2015_GEO_ID"}
+                }
+            }
         }
     },
-    "maths": {
-        "name": "📐 Combined Maths", "emoji": "📐", "years": "2012-2023",
-        "papers": {
-            "maths_2023": {"year": "2023", "id": "1KnfBXqXDt8XdQgo-fJ23N3dXVYM3iNnS"},
-            "maths_2022": {"year": "2022", "id": "1rV1FfRrLZViSyhdBscYiwU3Z0HRBJGqc"},
-            "maths_2021": {"year": "2021", "id": "1USBVSnWN3HoKz0N_c1j2w7x0xmtA_436"},
-            "maths_2020": {"year": "2020", "id": "1WPASU4XjshbDAcjDN08O452oJ3J3ZdOu"},
-            "maths_2019": {"year": "2019", "id": "1x5X4GOnkM56waRoSjpZW21ijNf62i39v"},
-            "maths_2018": {"year": "2018", "id": "1FH8POD5jAEP1zlMV-Df6d4YiTtwkUR55"},
-            "maths_2017": {"year": "2017", "id": "1DILTRLHAsasTPEeO31_aOvP63xvUA1jD"},
-            "maths_2016": {"year": "2016", "id": "1-Mp8RFORpf1vXw_-547olWS5Ema-NNKO"},
-            "maths_2015": {"year": "2015", "id": "14VFJKE0wPuurBzJnY2_yVYq8st6mCRr7"},
-            "maths_2014": {"year": "2014", "id": "1TuVDuV_WPV8lIdTI1_U_B4e7XVMECv5d"},
-            "maths_2013": {"year": "2013", "id": "19F-Q8jYfIwGXvVO9SCpeTlqN003Syq3A"},
-            "maths_2012": {"year": "2012", "id": "1UwCR0d--pDEGwdiK9hwuIMRnSYpiw-7Z"}
+    "tech": {
+        "name": "🔧 Technology", "emoji": "🔧",
+        "subjects": {
+            "et": {
+                "name": "⚙️ ET", "emoji": "⚙️", "years": "2015-2023",
+                "papers": {
+                    "et_2023": {"year": "2023", "id": "PASTE_2023_ET_ID"},
+                    "et_2022": {"year": "2022", "id": "PASTE_2022_ET_ID"},
+                    "et_2021": {"year": "2021", "id": "PASTE_2021_ET_ID"},
+                    "et_2020": {"year": "2020", "id": "PASTE_2020_ET_ID"},
+                    "et_2019": {"year": "2019", "id": "PASTE_2019_ET_ID"},
+                    "et_2018": {"year": "2018", "id": "PASTE_2018_ET_ID"},
+                    "et_2017": {"year": "2017", "id": "PASTE_2017_ET_ID"},
+                    "et_2016": {"year": "2016", "id": "PASTE_2016_ET_ID"},
+                    "et_2015": {"year": "2015", "id": "PASTE_2015_ET_ID"}
+                }
+            },
+            "bst": {
+                "name": "🔬 BST", "emoji": "🔬", "years": "2015-2023",
+                "papers": {
+                    "bst_2023": {"year": "2023", "id": "PASTE_2023_BST_ID"},
+                    "bst_2022": {"year": "2022", "id": "PASTE_2022_BST_ID"},
+                    "bst_2021": {"year": "2021", "id": "PASTE_2021_BST_ID"},
+                    "bst_2020": {"year": "2020", "id": "PASTE_2020_BST_ID"},
+                    "bst_2019": {"year": "2019", "id": "PASTE_2019_BST_ID"},
+                    "bst_2018": {"year": "2018", "id": "PASTE_2018_BST_ID"},
+                    "bst_2017": {"year": "2017", "id": "PASTE_2017_BST_ID"},
+                    "bst_2016": {"year": "2016", "id": "PASTE_2016_BST_ID"},
+                    "bst_2015": {"year": "2015", "id": "PASTE_2015_BST_ID"}
+                }
+            },
+            "sft": {
+                "name": "💻 SFT", "emoji": "💻", "years": "2015-2023",
+                "papers": {
+                    "sft_2023": {"year": "2023", "id": "PASTE_2023_SFT_ID"},
+                    "sft_2022": {"year": "2022", "id": "PASTE_2022_SFT_ID"},
+                    "sft_2021": {"year": "2021", "id": "PASTE_2021_SFT_ID"},
+                    "sft_2020": {"year": "2020", "id": "PASTE_2020_SFT_ID"},
+                    "sft_2019": {"year": "2019", "id": "PASTE_2019_SFT_ID"},
+                    "sft_2018": {"year": "2018", "id": "PASTE_2018_SFT_ID"},
+                    "sft_2017": {"year": "2017", "id": "PASTE_2017_SFT_ID"},
+                    "sft_2016": {"year": "2016", "id": "PASTE_2016_SFT_ID"},
+                    "sft_2015": {"year": "2015", "id": "PASTE_2015_SFT_ID"}
+                }
+            }
         }
     }
 }
@@ -85,7 +249,18 @@ def save_user(user_id):
             json.dump(users, f)
 
 def get_total_papers():
-    return sum(len(sub["papers"]) for sub in SUBJECTS.values())
+    total = 0
+    for stream in STREAMS.values():
+        for sub in stream["subjects"].values():
+            total += len(sub["papers"])
+    return total
+
+async def is_user_joined(user_id, context):
+    try:
+        member = await context.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+        return member.status in ['member', 'administrator', 'creator']
+    except BadRequest:
+        return False
 
 def download_gdrive(file_id):
     session = requests.Session()
@@ -99,46 +274,86 @@ def download_gdrive(file_id):
         response = session.get("https://drive.google.com/uc", params={'export': 'download', 'id': file_id, 'confirm': token}, stream=True)
     return response
 
+def join_channel_menu():
+    keyboard = [
+        [InlineKeyboardButton("📢 Join Channel", url=CHANNEL_LINK)],
+        [InlineKeyboardButton("✅ Verify Join", callback_data="verify_join")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
 def main_menu():
     keyboard = []
+    for stream_key, stream_data in STREAMS.items():
+        btn = InlineKeyboardButton(f"{stream_data['emoji']} {stream_data['name']}", callback_data=f"stream_{stream_key}")
+        keyboard.append([btn])
+    keyboard.append([InlineKeyboardButton(f"📊 Total Papers: {get_total_papers()}", callback_data="stats")])
+    return InlineKeyboardMarkup(keyboard)
+
+def stream_menu(stream_key):
+    keyboard = []
+    subjects = STREAMS[stream_key]["subjects"]
     row = []
-    for sub_key, sub_data in SUBJECTS.items():
+    for sub_key, sub_data in subjects.items():
         count = len(sub_data["papers"])
-        btn = InlineKeyboardButton(f"{sub_data['emoji']} {sub_key.title()} ({count})", callback_data=f"sub_{sub_key}")
+        btn = InlineKeyboardButton(f"{sub_data['emoji']} {sub_data['name']} ({count})", callback_data=f"sub_{stream_key}_{sub_key}")
         row.append(btn)
         if len(row) == 2:
             keyboard.append(row)
             row = []
     if row:
         keyboard.append(row)
-    keyboard.append([InlineKeyboardButton(f"📊 Total Papers: {get_total_papers()}", callback_data="stats")])
+    keyboard.append([InlineKeyboardButton("🔙 Back to Main Menu", callback_data="main_menu")])
     return InlineKeyboardMarkup(keyboard)
 
-def papers_menu(subject_key):
+def papers_menu(stream_key, subject_key):
     keyboard = []
-    papers = SUBJECTS[subject_key]["papers"]
+    papers = STREAMS[stream_key]["subjects"][subject_key]["papers"]
     sorted_papers = dict(sorted(papers.items(), reverse=True))
     row = []
     for paper_key, paper_data in sorted_papers.items():
-        btn = InlineKeyboardButton(f"📘 {paper_data['year']}", callback_data=f"paper_{subject_key}_{paper_key}")
+        btn = InlineKeyboardButton(f"📘 {paper_data['year']}", callback_data=f"paper_{stream_key}_{subject_key}_{paper_key}")
         row.append(btn)
         if len(row) == 3:
             keyboard.append(row)
             row = []
     if row:
         keyboard.append(row)
-    keyboard.append([InlineKeyboardButton("🔙 Back to Subjects", callback_data="main_menu")])
+    keyboard.append([InlineKeyboardButton("🔙 Back to Stream", callback_data=f"stream_{stream_key}")])
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    save_user(update.effective_user.id)
+    user_id = update.effective_user.id
+
+    # Check if user joined channel
+    if not await is_user_joined(user_id, context):
+        caption = """
+🔒 𝐉𝐨𝐢𝐧 𝐎𝐮𝐫 𝐂𝐡𝐚𝐧𝐞𝐥 𝐅𝐢𝐫𝐬𝐭
+━━━━━━━━━━━━━━━━━━━━
+📢 Bot එක Use කරන්න අපේ Channel එකට Join වෙන්න
+
+1️⃣ Join Channel Button එක Click කරන්න
+2️⃣ Channel එකට Join වෙන්න
+3️⃣ Verify Join Button එක Click කරන්න
+
+━━━━━━━━━━━━━━━━━━━━
+𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰
+        """
+        try:
+            with open(LOGO_FILE, 'rb') as photo:
+                await update.message.reply_photo(photo=photo, caption=caption, reply_markup=join_channel_menu())
+        except FileNotFoundError:
+            await update.message.reply_text(text=caption, reply_markup=join_channel_menu())
+        return
+
+    # User joined, show main menu
+    save_user(user_id)
     caption = """
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
 ━━━━━━━━━━━━━━━━━━━━
-⚛️ Physics | 🧪 Chemistry | 🧬 Biology | 📐 Maths
+🧬 Bio Stream | 💼 Commerce | 🎨 Arts | 🔧 Tech
 📚 A/L Past Papers Sinhala Medium
 ━━━━━━━━━━━━━━━━━━━━
-👇 Select Subject Below
+👇 Select Stream Below
     """
     try:
         with open(LOGO_FILE, 'rb') as photo:
@@ -171,30 +386,69 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
+    user_id = query.from_user.id
+
+    if data == "verify_join":
+        if await is_user_joined(user_id, context):
+            save_user(user_id)
+            caption = """
+✅ 𝐕𝐞𝐫𝐢𝐟𝐢𝐞𝐝 𝐒𝐮𝐜𝐞𝐬𝐟𝐮𝐥𝐲!
+━━━━━━━━━━━━━━━━━━━━
+🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
+━━━━━━━━━━━━━━━━━━━━
+🧬 Bio Stream | 💼 Commerce | 🎨 Arts | 🔧 Tech
+📚 A/L Past Papers Sinhala Medium
+━━━━━━━━━━━━━━━━━━━━
+👇 Select Stream Below
+            """
+            await query.message.edit_caption(caption=caption, reply_markup=main_menu())
+        else:
+            await query.answer("❌ You haven't joined yet! Join channel first.", show_alert=True)
+        return
+
+    # Check join for all other buttons
+    if not await is_user_joined(user_id, context):
+        await query.message.edit_caption(
+            caption="🔒 Please join our channel first to use the bot!",
+            reply_markup=join_channel_menu()
+        )
+        return
 
     if data == "main_menu":
         caption = """
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
 ━━━━━━━━━━━━━━━━━━━━
-⚛️ Physics | 🧪 Chemistry | 🧬 Biology | 📐 Maths
+🧬 Bio Stream | 💼 Commerce | 🎨 Arts | 🔧 Tech
 📚 A/L Past Papers Sinhala Medium
 ━━━━━━━━━━━━━━━━━━━━
-👇 Select Subject Below
+👇 Select Stream Below
         """
         await query.message.edit_caption(caption=caption, reply_markup=main_menu())
         return
 
     if data == "stats":
         stats = "📊 Bot Statistics\n━━━━━━━━━━━━━━━━━━━━\n"
-        for sub_data in SUBJECTS.values():
-            stats += f"{sub_data['emoji']} {sub_data['name']}: {len(sub_data['papers'])} Papers\n"
+        for stream_data in STREAMS.values():
+            total = sum(len(s["papers"]) for s in stream_data["subjects"].values())
+            stats += f"{stream_data['emoji']} {stream_data['name']}: {total} Papers\n"
         stats += f"━━━━━━━━━━━━━━━━━━━━\n🎯 Total: {get_total_papers()} Papers\n👥 Users: {len(load_users())}"
         await query.answer(stats, show_alert=True)
         return
 
+    if data.startswith("stream_"):
+        stream_key = data.split("_")[1]
+        stream = STREAMS[stream_key]
+        caption = f"""
+{stream['emoji']} {stream['name']}
+━━━━━━━━━━━━━━━━━━━━
+👇 Select Subject Below
+        """
+        await query.message.edit_caption(caption=caption, reply_markup=stream_menu(stream_key))
+        return
+
     if data.startswith("sub_"):
-        subject_key = data.split("_")[1]
-        sub = SUBJECTS[subject_key]
+        _, stream_key, subject_key = data.split("_", 2)
+        sub = STREAMS[stream_key]["subjects"][subject_key]
         caption = f"""
 {sub['emoji']} {sub['name']} Past Papers
 ━━━━━━━━━━━━━━━━━━━━
@@ -203,13 +457,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Year Below
         """
-        await query.message.edit_caption(caption=caption, reply_markup=papers_menu(subject_key))
+        await query.message.edit_caption(caption=caption, reply_markup=papers_menu(stream_key, subject_key))
         return
 
     if data.startswith("paper_"):
-        _, subject_key, paper_key = data.split("_", 2)
-        paper = SUBJECTS[subject_key]["papers"][paper_key]
-        sub = SUBJECTS[subject_key]
+        _, stream_key, subject_key, paper_key = data.split("_", 3)
+        paper = STREAMS[stream_key]["subjects"][subject_key]["papers"][paper_key]
+        sub = STREAMS[stream_key]["subjects"][subject_key]
 
         if "PASTE_" in paper['id']:
             await query.message.reply_text(f"⚠️ {sub['name']} {paper['year']} Paper එක තාම Add කරලා නෑ මචං")
@@ -240,5 +494,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v7.0")
+    print("Bot Started - Lanka Paper Hub v10.0")
     app.run_polling()
