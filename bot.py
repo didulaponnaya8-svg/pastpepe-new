@@ -5,12 +5,15 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 from telegram.error import BadRequest
 
-BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
+ADMIN_ID = 123456789 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
-CHANNEL_ID = "@sl_paperhub" # << උඹේ Channel Username දාපන් @ එක්ක
-CHANNEL_LINK = "https://t.me/sl_paperhub" # << උඹේ Channel Link එක
+
+# ============= මේ දෙක හරියටම දාපන් =============
+CHANNEL_USERNAME = "@LankaPaperHub" # @ එක්ක Username
+CHANNEL_LINK = "https://t.me/LankaPaperHub" # Full Link
+# ================================================
 
 # ============= STREAMS + SUBJECTS =============
 STREAMS = {
@@ -94,142 +97,25 @@ STREAMS = {
     "commerce": {
         "name": "💼 Commerce", "emoji": "💼",
         "subjects": {
-            "econ": {
-                "name": "📊 Economics", "emoji": "📊", "years": "2015-2023",
-                "papers": {
-                    "econ_2023": {"year": "2023", "id": "PASTE_2023_ECON_ID"},
-                    "econ_2022": {"year": "2022", "id": "PASTE_2022_ECON_ID"},
-                    "econ_2021": {"year": "2021", "id": "PASTE_2021_ECON_ID"},
-                    "econ_2020": {"year": "2020", "id": "PASTE_2020_ECON_ID"},
-                    "econ_2019": {"year": "2019", "id": "PASTE_2019_ECON_ID"},
-                    "econ_2018": {"year": "2018", "id": "PASTE_2018_ECON_ID"},
-                    "econ_2017": {"year": "2017", "id": "PASTE_2017_ECON_ID"},
-                    "econ_2016": {"year": "2016", "id": "PASTE_2016_ECON_ID"},
-                    "econ_2015": {"year": "2015", "id": "PASTE_2015_ECON_ID"}
-                }
-            },
-            "account": {
-                "name": "💰 Accounting", "emoji": "💰", "years": "2015-2023",
-                "papers": {
-                    "acc_2023": {"year": "2023", "id": "PASTE_2023_ACC_ID"},
-                    "acc_2022": {"year": "2022", "id": "PASTE_2022_ACC_ID"},
-                    "acc_2021": {"year": "2021", "id": "PASTE_2021_ACC_ID"},
-                    "acc_2020": {"year": "2020", "id": "PASTE_2020_ACC_ID"},
-                    "acc_2019": {"year": "2019", "id": "PASTE_2019_ACC_ID"},
-                    "acc_2018": {"year": "2018", "id": "PASTE_2018_ACC_ID"},
-                    "acc_2017": {"year": "2017", "id": "PASTE_2017_ACC_ID"},
-                    "acc_2016": {"year": "2016", "id": "PASTE_2016_ACC_ID"},
-                    "acc_2015": {"year": "2015", "id": "PASTE_2015_ACC_ID"}
-                }
-            },
-            "business": {
-                "name": "🏢 Business Studies", "emoji": "🏢", "years": "2015-2023",
-                "papers": {
-                    "bs_2023": {"year": "2023", "id": "PASTE_2023_BS_ID"},
-                    "bs_2022": {"year": "2022", "id": "PASTE_2022_BS_ID"},
-                    "bs_2021": {"year": "2021", "id": "PASTE_2021_BS_ID"},
-                    "bs_2020": {"year": "2020", "id": "PASTE_2020_BS_ID"},
-                    "bs_2019": {"year": "2019", "id": "PASTE_2019_BS_ID"},
-                    "bs_2018": {"year": "2018", "id": "PASTE_2018_BS_ID"},
-                    "bs_2017": {"year": "2017", "id": "PASTE_2017_BS_ID"},
-                    "bs_2016": {"year": "2016", "id": "PASTE_2016_BS_ID"},
-                    "bs_2015": {"year": "2015", "id": "PASTE_2015_BS_ID"}
-                }
-            }
+            "econ": {"name": "📊 Economics", "emoji": "📊", "years": "2015-2023", "papers": {}},
+            "account": {"name": "💰 Accounting", "emoji": "💰", "years": "2015-2023", "papers": {}},
+            "business": {"name": "🏢 Business Studies", "emoji": "🏢", "years": "2015-2023", "papers": {}}
         }
     },
     "arts": {
         "name": "🎨 Arts", "emoji": "🎨",
         "subjects": {
-            "sinhala": {
-                "name": "📚 Sinhala", "emoji": "📚", "years": "2015-2023",
-                "papers": {
-                    "sin_2023": {"year": "2023", "id": "PASTE_2023_SIN_ID"},
-                    "sin_2022": {"year": "2022", "id": "PASTE_2022_SIN_ID"},
-                    "sin_2021": {"year": "2021", "id": "PASTE_2021_SIN_ID"},
-                    "sin_2020": {"year": "2020", "id": "PASTE_2020_SIN_ID"},
-                    "sin_2019": {"year": "2019", "id": "PASTE_2019_SIN_ID"},
-                    "sin_2018": {"year": "2018", "id": "PASTE_2018_SIN_ID"},
-                    "sin_2017": {"year": "2017", "id": "PASTE_2017_SIN_ID"},
-                    "sin_2016": {"year": "2016", "id": "PASTE_2016_SIN_ID"},
-                    "sin_2015": {"year": "2015", "id": "PASTE_2015_SIN_ID"}
-                }
-            },
-            "history": {
-                "name": "🏛️ History", "emoji": "🏛️", "years": "2015-2023",
-                "papers": {
-                    "his_2023": {"year": "2023", "id": "PASTE_2023_HIS_ID"},
-                    "his_2022": {"year": "2022", "id": "PASTE_2022_HIS_ID"},
-                    "his_2021": {"year": "2021", "id": "PASTE_2021_HIS_ID"},
-                    "his_2020": {"year": "2020", "id": "PASTE_2020_HIS_ID"},
-                    "his_2019": {"year": "2019", "id": "PASTE_2019_HIS_ID"},
-                    "his_2018": {"year": "2018", "id": "PASTE_2018_HIS_ID"},
-                    "his_2017": {"year": "2017", "id": "PASTE_2017_HIS_ID"},
-                    "his_2016": {"year": "2016", "id": "PASTE_2016_HIS_ID"},
-                    "his_2015": {"year": "2015", "id": "PASTE_2015_HIS_ID"}
-                }
-            },
-            "geography": {
-                "name": "🌍 Geography", "emoji": "🌍", "years": "2015-2023",
-                "papers": {
-                    "geo_2023": {"year": "2023", "id": "PASTE_2023_GEO_ID"},
-                    "geo_2022": {"year": "2022", "id": "PASTE_2022_GEO_ID"},
-                    "geo_2021": {"year": "2021", "id": "PASTE_2021_GEO_ID"},
-                    "geo_2020": {"year": "2020", "id": "PASTE_2020_GEO_ID"},
-                    "geo_2019": {"year": "2019", "id": "PASTE_2019_GEO_ID"},
-                    "geo_2018": {"year": "2018", "id": "PASTE_2018_GEO_ID"},
-                    "geo_2017": {"year": "2017", "id": "PASTE_2017_GEO_ID"},
-                    "geo_2016": {"year": "2016", "id": "PASTE_2016_GEO_ID"},
-                    "geo_2015": {"year": "2015", "id": "PASTE_2015_GEO_ID"}
-                }
-            }
+            "sinhala": {"name": "📚 Sinhala", "emoji": "📚", "years": "2015-2023", "papers": {}},
+            "history": {"name": "🏛️ History", "emoji": "🏛️", "years": "2015-2023", "papers": {}},
+            "geography": {"name": "🌍 Geography", "emoji": "🌍", "years": "2015-2023", "papers": {}}
         }
     },
     "tech": {
         "name": "🔧 Technology", "emoji": "🔧",
         "subjects": {
-            "et": {
-                "name": "⚙️ ET", "emoji": "⚙️", "years": "2015-2023",
-                "papers": {
-                    "et_2023": {"year": "2023", "id": "PASTE_2023_ET_ID"},
-                    "et_2022": {"year": "2022", "id": "PASTE_2022_ET_ID"},
-                    "et_2021": {"year": "2021", "id": "PASTE_2021_ET_ID"},
-                    "et_2020": {"year": "2020", "id": "PASTE_2020_ET_ID"},
-                    "et_2019": {"year": "2019", "id": "PASTE_2019_ET_ID"},
-                    "et_2018": {"year": "2018", "id": "PASTE_2018_ET_ID"},
-                    "et_2017": {"year": "2017", "id": "PASTE_2017_ET_ID"},
-                    "et_2016": {"year": "2016", "id": "PASTE_2016_ET_ID"},
-                    "et_2015": {"year": "2015", "id": "PASTE_2015_ET_ID"}
-                }
-            },
-            "bst": {
-                "name": "🔬 BST", "emoji": "🔬", "years": "2015-2023",
-                "papers": {
-                    "bst_2023": {"year": "2023", "id": "PASTE_2023_BST_ID"},
-                    "bst_2022": {"year": "2022", "id": "PASTE_2022_BST_ID"},
-                    "bst_2021": {"year": "2021", "id": "PASTE_2021_BST_ID"},
-                    "bst_2020": {"year": "2020", "id": "PASTE_2020_BST_ID"},
-                    "bst_2019": {"year": "2019", "id": "PASTE_2019_BST_ID"},
-                    "bst_2018": {"year": "2018", "id": "PASTE_2018_BST_ID"},
-                    "bst_2017": {"year": "2017", "id": "PASTE_2017_BST_ID"},
-                    "bst_2016": {"year": "2016", "id": "PASTE_2016_BST_ID"},
-                    "bst_2015": {"year": "2015", "id": "PASTE_2015_BST_ID"}
-                }
-            },
-            "sft": {
-                "name": "💻 SFT", "emoji": "💻", "years": "2015-2023",
-                "papers": {
-                    "sft_2023": {"year": "2023", "id": "PASTE_2023_SFT_ID"},
-                    "sft_2022": {"year": "2022", "id": "PASTE_2022_SFT_ID"},
-                    "sft_2021": {"year": "2021", "id": "PASTE_2021_SFT_ID"},
-                    "sft_2020": {"year": "2020", "id": "PASTE_2020_SFT_ID"},
-                    "sft_2019": {"year": "2019", "id": "PASTE_2019_SFT_ID"},
-                    "sft_2018": {"year": "2018", "id": "PASTE_2018_SFT_ID"},
-                    "sft_2017": {"year": "2017", "id": "PASTE_2017_SFT_ID"},
-                    "sft_2016": {"year": "2016", "id": "PASTE_2016_SFT_ID"},
-                    "sft_2015": {"year": "2015", "id": "PASTE_2015_SFT_ID"}
-                }
-            }
+            "et": {"name": "⚙️ ET", "emoji": "⚙️", "years": "2015-2023", "papers": {}},
+            "bst": {"name": "🔬 BST", "emoji": "🔬", "years": "2015-2023", "papers": {}},
+            "sft": {"name": "💻 SFT", "emoji": "💻", "years": "2015-2023", "papers": {}}
         }
     }
 }
@@ -257,9 +143,10 @@ def get_total_papers():
 
 async def is_user_joined(user_id, context):
     try:
-        member = await context.bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+        member = await context.bot.get_chat_member(chat_id=CHANNEL_USERNAME, user_id=user_id)
         return member.status in ['member', 'administrator', 'creator']
-    except BadRequest:
+    except BadRequest as e:
+        print(f"Error checking membership: {e}")
         return False
 
 def download_gdrive(file_id):
@@ -308,32 +195,36 @@ def stream_menu(stream_key):
 def papers_menu(stream_key, subject_key):
     keyboard = []
     papers = STREAMS[stream_key]["subjects"][subject_key]["papers"]
-    sorted_papers = dict(sorted(papers.items(), reverse=True))
-    row = []
-    for paper_key, paper_data in sorted_papers.items():
-        btn = InlineKeyboardButton(f"📘 {paper_data['year']}", callback_data=f"paper_{stream_key}_{subject_key}_{paper_key}")
-        row.append(btn)
-        if len(row) == 3:
+    if not papers:
+        keyboard.append([InlineKeyboardButton("⚠️ No Papers Added Yet", callback_data="noop")])
+    else:
+        sorted_papers = dict(sorted(papers.items(), reverse=True))
+        row = []
+        for paper_key, paper_data in sorted_papers.items():
+            btn = InlineKeyboardButton(f"📘 {paper_data['year']}", callback_data=f"paper_{stream_key}_{subject_key}_{paper_key}")
+            row.append(btn)
+            if len(row) == 3:
+                keyboard.append(row)
+                row = []
+        if row:
             keyboard.append(row)
-            row = []
-    if row:
-        keyboard.append(row)
     keyboard.append([InlineKeyboardButton("🔙 Back to Stream", callback_data=f"stream_{stream_key}")])
     return InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
-    # Check if user joined channel
     if not await is_user_joined(user_id, context):
-        caption = """
+        caption = f"""
 🔒 𝐉𝐨𝐢𝐧 𝐎𝐮𝐫 𝐂𝐡𝐚𝐧𝐞𝐥 𝐅𝐢𝐫𝐬𝐭
 ━━━━━━━━━━━━━━━━━━━━
 📢 Bot එක Use කරන්න අපේ Channel එකට Join වෙන්න
 
 1️⃣ Join Channel Button එක Click කරන්න
-2️⃣ Channel එකට Join වෙන්න
+2️⃣ Channel එකට Join වෙන්න: {CHANNEL_USERNAME}
 3️⃣ Verify Join Button එක Click කරන්න
+
+⚠️ Bot Admin කරලා නැත්නම් වැඩ නෑ!
 
 ━━━━━━━━━━━━━━━━━━━━
 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰
@@ -345,7 +236,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(text=caption, reply_markup=join_channel_menu())
         return
 
-    # User joined, show main menu
     save_user(user_id)
     caption = """
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
@@ -388,6 +278,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = query.data
     user_id = query.from_user.id
 
+    if data == "noop":
+        return
+
     if data == "verify_join":
         if await is_user_joined(user_id, context):
             save_user(user_id)
@@ -403,13 +296,12 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             """
             await query.message.edit_caption(caption=caption, reply_markup=main_menu())
         else:
-            await query.answer("❌ You haven't joined yet! Join channel first.", show_alert=True)
+            await query.answer(f"❌ You haven't joined {CHANNEL_USERNAME} yet! Join first.", show_alert=True)
         return
 
-    # Check join for all other buttons
     if not await is_user_joined(user_id, context):
         await query.message.edit_caption(
-            caption="🔒 Please join our channel first to use the bot!",
+            caption=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
             reply_markup=join_channel_menu()
         )
         return
@@ -435,8 +327,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(stats, show_alert=True)
         return
 
+    # ============= FIXED SPLIT LOGIC =============
     if data.startswith("stream_"):
-        stream_key = data.split("_")[1]
+        stream_key = data.replace("stream_", "", 1)
         stream = STREAMS[stream_key]
         caption = f"""
 {stream['emoji']} {stream['name']}
@@ -447,7 +340,9 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data.startswith("sub_"):
-        _, stream_key, subject_key = data.split("_", 2)
+        parts = data.split("_", 2)
+        stream_key = parts[1]
+        subject_key = parts[2]
         sub = STREAMS[stream_key]["subjects"][subject_key]
         caption = f"""
 {sub['emoji']} {sub['name']} Past Papers
@@ -461,7 +356,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if data.startswith("paper_"):
-        _, stream_key, subject_key, paper_key = data.split("_", 3)
+        parts = data.split("_", 3)
+        stream_key = parts[1]
+        subject_key = parts[2]
+        paper_key = parts[3]
         paper = STREAMS[stream_key]["subjects"][subject_key]["papers"][paper_key]
         sub = STREAMS[stream_key]["subjects"][subject_key]
 
@@ -473,7 +371,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             r = download_gdrive(paper['id'])
             size_bytes = int(r.headers.get('Content-Length', 0))
-            size_mb = size_bytes / 1024
+            size_mb = size_bytes / 1024 / 1024
 
             await msg.edit_text(f"📤 Uploading...\n{sub['emoji']} {sub['name']} {paper['year']}")
             await query.message.reply_document(
@@ -494,5 +392,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v10.0")
+    print("Bot Started - Lanka Paper Hub v10.2")
     app.run_polling()
