@@ -7,7 +7,7 @@ from telegram.error import BadRequest
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
+ADMIN_ID = 8486116629 # << උඹේ Telegram ID එක දාපන්
 USERS_FILE = "users.json"
 
 # ============= මේ දෙක හරියටම දාපන් =============
@@ -211,6 +211,14 @@ def papers_menu(stream_key, subject_key):
     keyboard.append([InlineKeyboardButton("🔙 Back to Stream", callback_data=f"stream_{stream_key}")])
     return InlineKeyboardMarkup(keyboard)
 
+async def send_new_message(query, text, reply_markup):
+    """Delete old message and send new one - Works 100%"""
+    try:
+        await query.message.delete()
+    except:
+        pass
+    await query.message.reply_text(text=text, reply_markup=reply_markup)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
@@ -284,7 +292,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if data == "verify_join":
         if await is_user_joined(user_id, context):
             save_user(user_id)
-            caption = """
+            text = """
 ✅ 𝐕𝐞𝐫𝐢𝐟𝐢𝐞𝐝 𝐒𝐮𝐜𝐞𝐬𝐟𝐮𝐥𝐲!
 ━━━━━━━━━━━━━━━━━━━━
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
@@ -294,29 +302,18 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
             """
-            try:
-                await query.message.edit_caption(caption=caption, reply_markup=main_menu())
-            except:
-                await query.message.edit_text(text=caption, reply_markup=main_menu())
+            await send_new_message(query, text, main_menu())
         else:
             await query.answer(f"❌ You haven't joined {CHANNEL_USERNAME} yet! Join first.", show_alert=True)
         return
 
     if not await is_user_joined(user_id, context):
-        try:
-            await query.message.edit_caption(
-                caption=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
-                reply_markup=join_channel_menu()
-            )
-        except:
-            await query.message.edit_text(
-                text=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
-                reply_markup=join_channel_menu()
-            )
+        text = f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!"
+        await send_new_message(query, text, join_channel_menu())
         return
 
     if data == "main_menu":
-        caption = """
+        text = """
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
 ━━━━━━━━━━━━━━━━━━━━
 🧬 Bio Stream | 💼 Commerce | 🎨 Arts | 🔧 Tech
@@ -324,10 +321,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
         """
-        try:
-            await query.message.edit_caption(caption=caption, reply_markup=main_menu())
-        except:
-            await query.message.edit_text(text=caption, reply_markup=main_menu())
+        await send_new_message(query, text, main_menu())
         return
 
     if data == "stats":
@@ -339,28 +333,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(stats, show_alert=True)
         return
 
-    # ============= FIXED SPLIT LOGIC =============
     if data.startswith("stream_"):
         stream_key = data.replace("stream_", "", 1)
         stream = STREAMS[stream_key]
-        caption = f"""
+        text = f"""
 {stream['emoji']} {stream['name']}
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Subject Below
         """
-        try:
-            await query.message.edit_caption(caption=caption, reply_markup=stream_menu(stream_key))
-        except:
-            await query.message.edit_text(text=caption, reply_markup=stream_menu(stream_key))
+        await send_new_message(query, text, stream_menu(stream_key))
         return
 
     if data.startswith("sub_"):
-        # FIX: maxsplit=2 දාලා 3 කෑලි විතරයි ගන්නෙ
         parts = data.split("_", 2)
         stream_key = parts[1]
         subject_key = parts[2]
         sub = STREAMS[stream_key]["subjects"][subject_key]
-        caption = f"""
+        text = f"""
 {sub['emoji']} {sub['name']} Past Papers
 ━━━━━━━━━━━━━━━━━━━━
 📅 Years: {sub['years']}
@@ -368,14 +357,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Year Below
         """
-        try:
-            await query.message.edit_caption(caption=caption, reply_markup=papers_menu(stream_key, subject_key))
-        except:
-            await query.message.edit_text(text=caption, reply_markup=papers_menu(stream_key, subject_key))
+        await send_new_message(query, text, papers_menu(stream_key, subject_key))
         return
 
     if data.startswith("paper_"):
-        # FIX: maxsplit=3 දාලා 4 කෑලි විතරයි ගන්නෙ
         parts = data.split("_", 3)
         stream_key = parts[1]
         subject_key = parts[2]
@@ -431,5 +416,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v10.5")
-    app.run_polling()
+    print("Bot Started - Lanka Paper Hub v10.7")
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
