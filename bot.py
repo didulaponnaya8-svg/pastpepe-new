@@ -4,9 +4,9 @@ import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-BOT_TOKEN = "8105173071:AAGazfT6NIT3VqT6iayapnGpmm9alc9XvVY"
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 8231869218 # << උඹේ ID එක දාපන් @userinfobot එකෙන්
+ADMIN_ID = 123456789 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
 
 SUBJECTS = {
@@ -16,9 +16,9 @@ SUBJECTS = {
             "phy_2021": {"year": "2021", "id": "1ICLaJDoStL3J3wRDmPSJmqihX1tf6ORR"},
             "phy_2020": {"year": "2020", "id": "1jbpikdzS2tj1Q_X2tOiKYNVPYtZSg-tz"},
             "phy_2019": {"year": "2019", "id": "1N1I1-HzZdU1_YJ04I5GipyOcpQsn11uF"},
-            "phy_2018": {"year": "2018", "id": "1CYSZGiAl9gvpo62qH-1qiQvlN_N2odyA"},
-            "phy_2017": {"year": "2017", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"},
-            "phy_2016": {"year": "2016", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"}
+            "phy_2018": {"year": "2018", "id": "1HWCycDpK82X6ENdrc775BIr3x-CVBAYx"},
+            "phy_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
+            "phy_2016": {"year": "2016", "id": "1yP8OWb5e0ce2dKGV_Yrb95WGozDOXIYY"}
         }
     },
     "chemistry": {
@@ -29,41 +29,43 @@ SUBJECTS = {
             "chem_2020": {"year": "2020", "id": "1EjtW5p8HuOAo4QH5RBpHXi1FxvxZpk0I"},
             "chem_2019": {"year": "2019", "id": "1r8ugsWaHd7B1Rk56fr__hR1TCKhoLRIx"},
             "chem_2018": {"year": "2018", "id": "1FNKEb3ElNF-K830K93g87Q0uAvIqoXnm"},
-            "chem_2017": {"year": "2017", "id": "1reDL1lZp5NCV6c0AE27Ewxy0OZqnJT1W"},
+            "chem_2017": {"year": "2017", "id": "14jLO0EA2U4g9O1HX_7bHEjt4cCWgh4LS"},
             "chem_2016": {"year": "2016", "id": "1XqsC_8__XMv6XhkABCIqBeu2FZk7wMzX"}
         }
     },
     "biology": {
         "name": "🧬 Biology", "emoji": "🧬", "years": "2011-2023",
         "papers": {
-            "bio_2023": {"year": "2023", "id": "1m46B0XwT0wILto45xmfJbLVyVO7SotwI"},
-            "bio_2022": {"year": "2022", "id": "1Vple1rcjSM_ZCB2hFpHi2g26ZwOmnqFD"},
-            "bio_2021": {"year": "2021", "id": "1-w0U7c_rP_sUzTwNXJjiuCvAoHIc3IJg"},
-            "bio_2020": {"year": "2020", "id": "1tO8s6-fFa9QEoHVF14LDeSWq9CTKV2Vg"},
-            "bio_2019": {"year": "2019", "id": "1OcaqyWatw1E9AU6gsbhyDOJSUyEnXOFL"},
-            "bio_2018": {"year": "2018", "id": "1qd3D35yz-TglQ_3yJDcqPm7f7Vj8Uxjx"},
+            "bio_2023": {"year": "2023", "id": "1dsc1-TXuXySD2Tb26pZafqZLoZUL3DBy"},
+            "bio_2022": {"year": "2022", "id": "1US231ibZFSYwVqEQWmfFXrI2KYumY-S1"},
+            "bio_2021": {"year": "2021", "id": "1U7fnfUZ6wsslU7L7eAxZXXTgEjViKdEm"},
+            "bio_2020": {"year": "2020", "id": "1uyfLx5tIoaEkZuu9-S9iJXkoK1w5YH5u"},
+            "bio_2019": {"year": "2019", "id": "1yWEcJFPxXmHsWqtN-mZWb3vytfq_RWAv"},
+            "bio_2018": {"year": "2018", "id": "1LNL7D8cRJekekfuGCUMkCXoDdBqeqw-g"},
             "bio_2017": {"year": "2017", "id": "1fCEvtD07JA32TwP_pudB31mptU-MVE3-"},
-            "bio_2016": {"year": "2016", "id": "1U7fnfUZ6wsslU7L7eAxZXXTgEjViKdEm"},
-            "bio_2015": {"year": "2015", "id": "1uyfLx5tIoaEkZuu9-S9iJXkoK1w5YH5u"},
-            "bio_2013": {"year": "2013", "id": "1US231ibZFSYwVqEQWmfFXrI2KYumY-S1"},
-            "bio_2011": {"year": "2011", "id": "1dsc1-TXuXySD2Tb26pZafqZLoZUL3DBy"}
+            "bio_2016": {"year": "2016", "id": "1qd3D35yz-TglQ_3yJDcqPm7f7Vj8Uxjx"},
+            "bio_2015": {"year": "2015", "id": "1OcaqyWatw1E9AU6gsbhyDOJSUyEnXOFL"},
+            "bio_2014": {"year": "2014", "id": "1tO8s6-fFa9QEoHVF14LDeSWq9CTKV2Vg"},
+            "bio_2013": {"year": "2013", "id": "1-w0U7c_rP_sUzTwNXJjiuCvAoHIc3IJg"},
+            "bio_2012": {"year": "2012", "id": "1Vple1rcjSM_ZCB2hFpHi2g26ZwOmnqFD"},
+            "bio_2011": {"year": "2011", "id": "1m46B0XwT0wILto45xmfJbLVyVO7SotwI"}
         }
     },
     "maths": {
         "name": "📐 Combined Maths", "emoji": "📐", "years": "2012-2023",
         "papers": {
-            "maths_2023": {"year": "2023", "id": "1UwCR0d--pDEGwdiK9hwuIMRnSYpiw-7Z"},
-            "maths_2022": {"year": "2022", "id": "19F-Q8jYfIwGXvVO9SCpeTlqN003Syq3A"},
-            "maths_2021": {"year": "2021", "id": "1TuVDuV_WPV8lIdTI1_U_B4e7XVMECv5d"},
-            "maths_2020": {"year": "2020", "id": "14VFJKE0wPuurBzJnY2_yVYq8st6mCRr7"},
-            "maths_2019": {"year": "2019", "id": "1-Mp8RFORpf1vXw_-547olWS5Ema-NNKO"},
-            "maths_2018": {"year": "2018", "id": "1DILTRLHAsasTPEeO31_aOvP63xvUA1jD"},
-            "maths_2017": {"year": "2017", "id": "1FH8POD5jAEP1zlMV-Df6d4YiTtwkUR55"},
-            "maths_2016": {"year": "2016", "id": "1x5X4GOnkM56waRoSjpZW21ijNf62i39v"},
-            "maths_2015": {"year": "2015", "id": "1WPASU4XjshbDAcjDN08O452oJ3J3ZdOu"},
-            "maths_2014": {"year": "2014", "id": "1USBVSnWN3HoKz0N_c1j2w7x0xmtA_436"},
-            "maths_2013": {"year": "2013", "id": "1rV1FfRrLZViSyhdBscYiwU3Z0HRBJGqc"},
-            "maths_2012": {"year": "2012", "id": "1KnfBXqXDt8XdQgo-fJ23N3dXVYM3iNnS"}
+            "maths_2023": {"year": "2023", "id": "1KnfBXqXDt8XdQgo-fJ23N3dXVYM3iNnS"},
+            "maths_2022": {"year": "2022", "id": "1rV1FfRrLZViSyhdBscYiwU3Z0HRBJGqc"},
+            "maths_2021": {"year": "2021", "id": "1USBVSnWN3HoKz0N_c1j2w7x0xmtA_436"},
+            "maths_2020": {"year": "2020", "id": "1WPASU4XjshbDAcjDN08O452oJ3J3ZdOu"},
+            "maths_2019": {"year": "2019", "id": "1x5X4GOnkM56waRoSjpZW21ijNf62i39v"},
+            "maths_2018": {"year": "2018", "id": "1FH8POD5jAEP1zlMV-Df6d4YiTtwkUR55"},
+            "maths_2017": {"year": "2017", "id": "1DILTRLHAsasTPEeO31_aOvP63xvUA1jD"},
+            "maths_2016": {"year": "2016", "id": "1-Mp8RFORpf1vXw_-547olWS5Ema-NNKO"},
+            "maths_2015": {"year": "2015", "id": "14VFJKE0wPuurBzJnY2_yVYq8st6mCRr7"},
+            "maths_2014": {"year": "2014", "id": "1TuVDuV_WPV8lIdTI1_U_B4e7XVMECv5d"},
+            "maths_2013": {"year": "2013", "id": "19F-Q8jYfIwGXvVO9SCpeTlqN003Syq3A"},
+            "maths_2012": {"year": "2012", "id": "1UwCR0d--pDEGwdiK9hwuIMRnSYpiw-7Z"}
         }
     }
 }
@@ -130,7 +132,7 @@ def papers_menu(subject_key):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_user(update.effective_user.id)
-    caption = f"""
+    caption = """
 🌟 𝐋𝐚𝐧𝐤𝐚 𝐏𝐚𝐩𝐞𝐫 𝐇𝐮𝐛 🇱🇰 🌟
 ━━━━━━━━━━━━━━━━━━━━
 ⚛️ Physics | 🧪 Chemistry | 🧬 Biology | 📐 Maths
@@ -208,23 +210,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         _, subject_key, paper_key = data.split("_", 2)
         paper = SUBJECTS[subject_key]["papers"][paper_key]
         sub = SUBJECTS[subject_key]
+
+        if "PASTE_" in paper['id']:
+            await query.message.reply_text(f"⚠️ {sub['name']} {paper['year']} Paper එක තාම Add කරලා නෑ මචං")
+            return
+
         msg = await query.message.reply_text(f"⏳ Downloading...\n{sub['emoji']} {sub['name']} {paper['year']}")
         try:
             r = download_gdrive(paper['id'])
-            # MB වලට හරියටම Convert කරනවා
             size_bytes = int(r.headers.get('Content-Length', 0))
-            size_mb = size_bytes / 1024 / 1024
-
-            # 50MB වලට වඩා ලොකු නම් Direct Link එක යවනවා
-            if size_mb > 49:
-                await msg.edit_text(
-                    f"❌ File Too Large\n━━━━━━━━━━━━━━━━━━━━\n"
-                    f"📄 {sub['name']} {paper['year']}\n"
-                    f"💾 Size: {size_mb:.1f}MB\n\n"
-                    f"📎 Direct Download:\n"
-                    f"https://drive.google.com/file/d/{paper['id']}/view"
-                )
-                return
+            size_mb = size_bytes / 1024
 
             await msg.edit_text(f"📤 Uploading...\n{sub['emoji']} {sub['name']} {paper['year']}")
             await query.message.reply_document(
@@ -234,12 +229,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await msg.delete()
         except Exception as e:
-            await msg.edit_text(f"❌ Error: {str(e)[:100]}")
+            await msg.edit_text(
+                f"❌ Error: File එක Public කරලා නෑ\n\n"
+                f"📄 {sub['name']} {paper['year']}\n\n"
+                f"Share → Anyone with the link → Viewer දාන්න"
+            )
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v5.1")
+    print("Bot Started - Lanka Paper Hub v7.0")
     app.run_polling()
