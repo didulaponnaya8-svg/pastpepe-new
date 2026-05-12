@@ -7,7 +7,7 @@ from telegram.error import BadRequest
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 LOGO_FILE = "logo.png"
-ADMIN_ID = 123456789 # << උඹේ ID එක දාපන්
+ADMIN_ID = 8486116629 # << උඹේ ID එක දාපන්
 USERS_FILE = "users.json"
 
 # ============= මේ දෙක හරියටම දාපන් =============
@@ -294,16 +294,25 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
             """
-            await query.message.edit_caption(caption=caption, reply_markup=main_menu())
+            try:
+                await query.message.edit_caption(caption=caption, reply_markup=main_menu())
+            except:
+                await query.message.edit_text(text=caption, reply_markup=main_menu())
         else:
             await query.answer(f"❌ You haven't joined {CHANNEL_USERNAME} yet! Join first.", show_alert=True)
         return
 
     if not await is_user_joined(user_id, context):
-        await query.message.edit_caption(
-            caption=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
-            reply_markup=join_channel_menu()
-        )
+        try:
+            await query.message.edit_caption(
+                caption=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
+                reply_markup=join_channel_menu()
+            )
+        except:
+            await query.message.edit_text(
+                text=f"🔒 Please join {CHANNEL_USERNAME} first to use the bot!",
+                reply_markup=join_channel_menu()
+            )
         return
 
     if data == "main_menu":
@@ -315,7 +324,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Stream Below
         """
-        await query.message.edit_caption(caption=caption, reply_markup=main_menu())
+        try:
+            await query.message.edit_caption(caption=caption, reply_markup=main_menu())
+        except:
+            await query.message.edit_text(text=caption, reply_markup=main_menu())
         return
 
     if data == "stats":
@@ -327,7 +339,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer(stats, show_alert=True)
         return
 
-    # ============= FIXED SPLIT LOGIC =============
     if data.startswith("stream_"):
         stream_key = data.replace("stream_", "", 1)
         stream = STREAMS[stream_key]
@@ -336,7 +347,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Subject Below
         """
-        await query.message.edit_caption(caption=caption, reply_markup=stream_menu(stream_key))
+        try:
+            await query.message.edit_caption(caption=caption, reply_markup=stream_menu(stream_key))
+        except:
+            await query.message.edit_text(text=caption, reply_markup=stream_menu(stream_key))
         return
 
     if data.startswith("sub_"):
@@ -352,7 +366,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 ━━━━━━━━━━━━━━━━━━━━
 👇 Select Year Below
         """
-        await query.message.edit_caption(caption=caption, reply_markup=papers_menu(stream_key, subject_key))
+        try:
+            await query.message.edit_caption(caption=caption, reply_markup=papers_menu(stream_key, subject_key))
+        except:
+            await query.message.edit_text(text=caption, reply_markup=papers_menu(stream_key, subject_key))
         return
 
     if data.startswith("paper_"):
@@ -392,5 +409,5 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("broadcast", broadcast))
     app.add_handler(CallbackQueryHandler(button_handler))
-    print("Bot Started - Lanka Paper Hub v10.2")
+    print("Bot Started - Lanka Paper Hub v10.3")
     app.run_polling()
